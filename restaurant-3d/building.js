@@ -299,9 +299,23 @@
     for (let z = VOID.z0 + 0.3; z <= VOID.z1 + 0.01; z += 0.3) rail(first, [VOID.x1, FF, z], [VOID.x1, FF + 1.0, z]);
     for (let x = VOID.x0 + 0.3; x < VOID.x1; x += 0.3) rail(first, [x, FF, VOID.z1], [x, FF + 1.0, VOID.z1]);
 
-    // Knee walls to front and back (1.5 m)
+    // Glazed dormer on the front slope (Revised Elevation 02): grid C1 to B1, head 2,630 above first floor
+    const DX0 = 2.75, DX1 = 7.15;                        // just outside grids C1 (2.8) and B1 (7.0)
+    const DHEAD = FF + 2.63;
+    const DZB = RIDGE_Z + (RIDGE - DHEAD) - 0.05;        // where the dormer roof meets the main slope
+
+    // Knee walls to front and back (1.5 m); the front one stops either side of the dormer
     wall(first, 'x', 0, 10, 0, 0.2, FF, EAVE);
-    wall(first, 'x', 0, 10, 9.8, 10, FF, EAVE);
+    wall(first, 'x', 0, DX0, 9.8, 10, FF, EAVE);
+    wall(first, 'x', DX1, 10, 9.8, 10, FF, EAVE);
+
+    // Dormer front: chunky portal frame, four glazed bays and a guarding transom
+    box(first, mats.column, DX0, DX0 + 0.2, FF, DHEAD, 9.95, 10.2, 'Dormer frame');
+    box(first, mats.column, DX1 - 0.2, DX1, FF, DHEAD, 9.95, 10.2, 'Dormer frame');
+    box(first, mats.column, DX0, DX1, DHEAD - 0.2, DHEAD, 9.95, 10.2, 'Dormer frame');
+    box(first, mats.column, DX0, DX1, FF - 0.05, FF + 0.06, 9.95, 10.2, 'Dormer frame');
+    curtain(first, 'x', DX0 + 0.2, DX1 - 0.2, 10.05, FF + 0.06, DHEAD - 0.2, 1.0);
+    box(first, mats.frame, DX0 + 0.2, DX1 - 0.2, FF + 1.05, FF + 1.11, 10.0, 10.1, 'Dormer transom');
 
     // West gable wall: pentagon in the (z, y) plane, 200 mm thick
     function gableShape(inset) {
@@ -384,7 +398,10 @@
     panel(roof, mats.roof, 'N', SK.x1, RX1, 0, D_N, 0, T, 'Roof sheeting');
     panel(roof, mats.roof, 'N', SK.x0, SK.x1, 0, SK.d0, 0, T, 'Roof sheeting');
     panel(roof, mats.roof, 'N', SK.x0, SK.x1, SK.d1, D_N, 0, T, 'Roof sheeting');
-    panel(roof, mats.roof, 'S', RX0, RX1, 0, D_S, 0, T, 'Roof sheeting');
+    const DD = DZB - RIDGE_Z;                            // slope distance cut back for the dormer
+    panel(roof, mats.roof, 'S', RX0, DX0, 0, D_S, 0, T, 'Roof sheeting');
+    panel(roof, mats.roof, 'S', DX1, RX1, 0, D_S, 0, T, 'Roof sheeting');
+    panel(roof, mats.roof, 'S', DX0, DX1, 0, DD, 0, T, 'Roof sheeting');
     panel(roof, mats.glass, 'N', SK.x0, SK.x1, SK.d0, SK.d1, 0.02, 0.02, 'Skylight glazing');
     panel(roof, mats.frame, 'N', SK.x0 - 0.06, SK.x0, SK.d0, SK.d1, 0.02, 0.1, 'Skylight frame');
     panel(roof, mats.frame, 'N', SK.x1, SK.x1 + 0.06, SK.d0, SK.d1, 0.02, 0.1, 'Skylight frame');
@@ -399,13 +416,33 @@
       } else {
         panel(roof, mats.roof, 'N', x - 0.02, x + 0.02, 0, D_N, T, 0.04);
       }
-      panel(roof, mats.roof, 'S', x - 0.02, x + 0.02, 0, D_S, T, 0.04);
+      panel(roof, mats.roof, 'S', x - 0.02, x + 0.02, 0, x > DX0 && x < DX1 ? DD : D_S, T, 0.04);
     }
+
+    // Dormer roof (shallow fall to the front, standing seams) and clad cheeks
+    const droof = box(roof, mats.roof, DX0 - 0.12, DX1 + 0.12, DHEAD, DHEAD + 0.16, DZB - 0.1, 10.45, 'Dormer roof');
+    droof.rotation.x = 0.04;
+    for (let z = DZB + 0.15; z < 10.4; z += 0.3) box(roof, mats.roof, DX0 - 0.12, DX1 + 0.12, DHEAD + 0.16, DHEAD + 0.2, z - 0.015, z + 0.015);
+    function cheek(x0) {
+      const s = new THREE.Shape();
+      s.moveTo(DZB, DHEAD);
+      s.lineTo(10.2, DHEAD);
+      s.lineTo(10.2, roofUnder(10.2) - 0.05);
+      s.closePath();
+      const geo = new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: false });
+      geo.rotateY(-Math.PI / 2);
+      const m = new THREE.Mesh(geo, mats.roof);
+      m.position.x = x0 + 0.18; m.name = 'Dormer cheek';
+      roof.add(shadowy(m));
+    }
+    cheek(DX0 - 0.12);
+    cheek(DX1 - 0.06);
+    box(roof, mats.steel, DX0, DX1, DHEAD - 0.2, DHEAD, DZB - 0.15, DZB, 'Dormer trimmer');
     // Ridge capping and fascia boards
     const cap = new THREE.Mesh(new THREE.BoxGeometry(RX1 - RX0, 0.22, 0.22), mats.frame);
     cap.rotation.x = Math.PI / 4; cap.position.set((RX0 + RX1) / 2, RIDGE + 0.04, RIDGE_Z); roof.add(shadowy(cap));
     box(roof, mats.frame, RX0, RX1, RIDGE - D_N - 0.12, RIDGE - D_N + 0.08, RIDGE_Z - D_N - 0.05, RIDGE_Z - D_N + 0.03, 'Fascia');
-    box(roof, mats.frame, RX0, RX1, RIDGE - D_S - 0.12, RIDGE - D_S + 0.08, RIDGE_Z + D_S - 0.03, RIDGE_Z + D_S + 0.05, 'Fascia');
+    [[RX0, DX0 - 0.12], [DX1 + 0.12, RX1]].forEach(([a, b]) => box(roof, mats.frame, a, b, RIDGE - D_S - 0.12, RIDGE - D_S + 0.08, RIDGE_Z + D_S - 0.03, RIDGE_Z + D_S + 0.05, 'Fascia'));
 
     // Prefabricated SHS/RHS trusses (bottom chord on the grid 3 beam level)
     const tz = BEAM_Y + 0.2 - EAVE;        // where the bottom chord meets the slope
@@ -414,7 +451,8 @@
       const r = 0.035, m = mats.steel;
       rod(roof, m, [x, yB, tz], [x, yB, 10 - tz], r);
       rod(roof, m, [x, EAVE, 0.1], [x, RIDGE - 0.05, RIDGE_Z], r);
-      rod(roof, m, [x, EAVE, 9.9], [x, RIDGE - 0.05, RIDGE_Z], r);
+      if (x > DX0 && x < DX1) rod(roof, m, [x, RIDGE - DD, DZB], [x, RIDGE - 0.05, RIDGE_Z], r);
+      else rod(roof, m, [x, EAVE, 9.9], [x, RIDGE - 0.05, RIDGE_Z], r);
       rod(roof, m, [x, yB, RIDGE_Z], [x, RIDGE - 0.05, RIDGE_Z], r);
       const za = (tz + RIDGE_Z) / 2, zb = 10 - za;
       rod(roof, m, [x, yB, za], [x, roofUnder(za), za], r);

@@ -33,10 +33,12 @@ The scheme in `interior.js` replaces every material with a textured one and adds
 - **Lighting:** low late‑afternoon sun through the shopfront and the east gable, warm LED coves, and backlit tree‑silhouette panels on the restaurant's west wall and the lounge gable.
 - **Rendering:** filmic (ACES) tone mapping, ground‑truth ambient occlusion (GTAO) and bloom.
 
-## Revised elevations (not yet applied)
+## Roof dormer (from Revised Elevation 02)
 
-The geometry still follows the original floor plans. The revised elevations sheet differs from them in the following ways:
+A glazed box dormer sits on the front roof slope, between grids C1 and B1. Its head is 2,630 mm above the first floor, and it has a deep light portal frame, four glazed bays with a guarding transom, a dark standing‑seam roof and clad cheeks. The front knee wall, the roof sheeting and the truss on grid C stop around it.
 
-- **Ground floor height:** 3,100 mm plus a 350 mm beam.
-- **Dormer:** a glazed dormer on Elevation 02, between grids C1 and B1.
-- **Verandah roof:** a lean‑to roof over the verandah.
+The rest of the revised elevations sheet isn't applied yet: the 3,100 mm ground floor with a 350 mm beam, and the lean‑to verandah roof.
+
+## Walkthrough video
+
+`video/record.cjs` renders the walkthrough frame by frame from `index.html` in headless Chromium. Its header comment has the `ffmpeg` command that turns the frames into an MP4.

@@ -332,7 +332,9 @@
       'Service counter': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Cashier desk': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Planter': F.clay,
-      'Plinth': F.sandstone
+      'Plinth': F.sandstone,
+      'Dormer roof': [F.roofSheet, F.roofSheet, F.roofSheet, F.boards, F.roofSheet, F.roofSheet],
+      'Dormer frame': [F.ceiling, F.ceiling, F.ceiling, F.ceiling, F.ceiling, F.ceiling]
     };
     model.root.traverse(o => {
       if (!o.isMesh) return;
@@ -418,7 +420,9 @@
     cove(groups.ground, 0.3, 9.7, 3.43, 3.445, 9.74, 9.79, [5, 3.42, 9.7], [5, 0, 9.0], 9.2, 0.2, 4);
     // Lounge: uplights along both knee walls, washing the timber-lined roof
     cove(groups.first, 0.2, 9.8, EAVE - 0.03, EAVE - 0.01, 0.2, 0.24, [5, EAVE, 0.35], [5, EAVE + 4, 2.4], 9.4, 0.25, 7);
-    cove(groups.first, 0.2, 9.8, EAVE - 0.03, EAVE - 0.01, 9.76, 9.8, [5, EAVE, 9.65], [5, EAVE + 4, 7.6], 9.4, 0.25, 7);
+    // Front knee wall is split by the dormer (grid C1 to B1)
+    cove(groups.first, 0.2, 2.75, EAVE - 0.03, EAVE - 0.01, 9.76, 9.8, [1.5, EAVE, 9.65], [1.5, EAVE + 4, 7.6], 2.5, 0.25, 7);
+    cove(groups.first, 7.15, 9.8, EAVE - 0.03, EAVE - 0.01, 9.76, 9.8, [8.5, EAVE, 9.65], [8.5, EAVE + 4, 7.6], 2.6, 0.25, 7);
     // Corridor downlights and kitchen task lighting
     [[1.8, 1.4], [1.8, 3.6]].forEach(([x, z]) => {
       const d = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.01, 24), F.bulb);

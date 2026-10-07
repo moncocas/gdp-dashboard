@@ -46,7 +46,7 @@
   .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size: 10.5px; color: var(--muted); }
   .palette span { display: grid; gap: 4px; }
   .palette i { display: block; height: 18px; border: 1px solid rgba(0,0,0,0.12); }
-  .views { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .views { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .views button, .quality {
     font: 500 13px/1 var(--font-body); color: var(--ink); background: transparent;
     border: 1px solid var(--line); padding: 9px 4px; cursor: pointer;
@@ -70,7 +70,12 @@
     background: rgba(28, 18, 12, 0.42); padding: 8px 12px; margin: 0;
   }
   .caption small { display: block; font-family: var(--font-mono); font-style: normal; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
-  .loading[hidden] { display: none; }
+  .loading[hidden], .film[hidden] { display: none; }
+  .fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+  /* Title cards used when the walkthrough video is recorded */
+  .film { position: fixed; left: 56px; bottom: 56px; color: #fbf1e3; text-shadow: 0 2px 18px rgba(0,0,0,0.6); pointer-events: none; }
+  .film-sub { margin: 0 0 6px; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.85; }
+  .film-title { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 54px; line-height: 1; }
   .loading { position: fixed; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; color: #e9d9c4; pointer-events: none; }
   @media (max-width: 560px) {
     .card { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
@@ -101,6 +106,7 @@
     <button id="v-lounge" type="button" aria-pressed="false">Lounge</button>
     <button id="v-walk" type="button" aria-pressed="false">Walkway</button>
     <button id="v-ext" type="button" aria-pressed="false">Exterior</button>
+    <button id="v-dormer" type="button" aria-pressed="false">Dormer</button>
     <button id="v-cut" type="button" aria-pressed="false">Roof off</button>
     <button id="v-sec" type="button" aria-pressed="false">Section X–X</button>
   </div>
@@ -120,6 +126,8 @@
 </section>
 
 <p class="caption" id="caption"></p>
+<div class="fade" id="fade"></div>
+<div class="film" id="film" hidden><p class="film-sub" id="film-sub"></p><p class="film-title" id="film-title"></p></div>
 
 <script type="importmap">
 { "imports": {
@@ -217,6 +225,7 @@ const views = {
   'v-rest':   { cam: [9.35, 1.72, 5.55], target: [2.0, 1.35, 8.9], fov: 58, exp: 0.95, caption: 'Restaurant, ground floor', note: 'Looking south-west to the booths and silhouette panel' },
   'v-lounge': { cam: [9.55, 5.3, 7.75], target: [1.0, 5.9, 4.0], fov: 60, exp: 0.82, caption: 'Lounge under the roof', note: 'Looking west to the backlit gable' },
   'v-walk':   { cam: [1.8, 1.62, 4.75], target: [1.8, 0.95, 0.2], fov: 64, exp: 1.4, caption: 'Back-of-house walkway', note: 'W.C. doors left, kitchen right' },
+  'v-dormer': { cam: [5.0, 4.4, 22.0], target: [4.95, 5.4, 9.0], fov: 38, exp: 0.75, caption: 'The new roof dormer', note: 'Glazed box dormer, grids C1 to B1' },
   'v-ext':    { cam: [20.5, 2.0, 23.5], target: [4.6, 4.3, 5.2], fov: 40, exp: 0.75, caption: 'Golden hour from the street', note: 'Shopfront, verandah and the glazed east gable' },
   'v-cut':    { cam: [-5.5, 16.5, 19.5], target: [5, 3.6, 5], fov: 42, exp: 0.85, roof: false, caption: 'Roof off', note: 'Lounge layout from above' },
   'v-sec':    { cam: [24, 5.4, 5.2], target: [5, 5, 5.2], fov: 42, exp: 0.95, clip: true, caption: 'Section X–X', note: 'Cut between grids C and B, looking west' }
@@ -305,5 +314,31 @@ renderer.setAnimationLoop(now => {
 });
 
 // Hooks for producing still renders
-window.__render = { show: id => show(id, true), frames: () => frames, setHigh: v => { high = v; applyQuality(); } };
+// Frame-by-frame camera control for recording the walkthrough video
+function shot(o) {
+  camera.position.set(...o.cam); controls.target.set(...o.target);
+  camera.fov = o.fov; camera.updateProjectionMatrix(); camera.lookAt(controls.target);
+  renderer.toneMappingExposure = o.exp;
+  model.groups.roof.visible = o.roof !== false;
+  const clip = o.clipX !== undefined && o.clipX !== null;
+  if (clip) cut.constant = o.clipX;
+  if (clip !== !!shot.clip) setClip(clip);
+  // The scene is static, so the sun's shadow map only needs redrawing when the cut or roof changes
+  renderer.shadowMap.autoUpdate = false;
+  const key = (clip ? o.clipX.toFixed(2) : '-') + (o.roof !== false);
+  if (key !== shot.key) { renderer.shadowMap.needsUpdate = true; shot.key = key; }
+  shot.clip = clip;
+  gtao.enabled = high && !clip;
+  tween = null; dirty = true;
+}
+function film(title, sub, opacity, fade) {
+  document.getElementById('fade').style.opacity = fade || 0;
+  const el = document.getElementById('film');
+  el.hidden = !title || opacity <= 0;
+  el.style.opacity = opacity;
+  document.getElementById('film-title').textContent = title || '';
+  document.getElementById('film-sub').textContent = sub || '';
+}
+function renderNow() { controls.update(); composer.render(); frames++; dirty = false; document.getElementById('loading').hidden = true; return frames; }
+window.__render = { show: id => show(id, true), shot, film, renderNow, frames: () => frames, setHigh: v => { high = v; applyQuality(); } };
 </script>
