@@ -1,0 +1,217 @@
+<title>Sadik Restaurant Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: full-bleed 3D canvas with a drawing-sheet title block floating top-left */
+  :root {
+    --sky: #dfe7ea;
+    --paper: #fbfaf7;
+    --ink: #1d2a33;
+    --muted: #5d6b73;
+    --line: #c9d3d6;
+    --accent: #1f5f8b;
+    --accent-ink: #ffffff;
+    --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sky: #1a2228; --paper: #222c33; --ink: #e6ecef; --muted: #9aa9b1; --line: #36444c;
+      --accent: #6fb3e0; --accent-ink: #0d1a22; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sky: #1a2228; --paper: #222c33; --ink: #e6ecef; --muted: #9aa9b1; --line: #36444c;
+    --accent: #6fb3e0; --accent-ink: #0d1a22; color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--sky); color: var(--ink); font-family: var(--font-display); overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  .sheet {
+    position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px;
+    width: min(340px, calc(100vw - 32px));
+    background: var(--paper); border: 1px solid var(--line);
+    display: grid; gap: 0;
+  }
+  .sheet > * { padding: 12px 14px; }
+  .sheet > * + * { border-top: 1px solid var(--line); }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
+  h1 { font-size: 22px; line-height: 1.15; margin: 0; font-weight: 700; text-wrap: balance; }
+  .views { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .views button {
+    font: 600 13px/1 var(--font-display); color: var(--ink); background: transparent;
+    border: 1px solid var(--line); padding: 9px 4px; cursor: pointer;
+  }
+  .views button:hover { border-color: var(--accent); }
+  .views button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .views button:focus-visible, .toggle summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  dl { margin: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+  .meta { display: flex; justify-content: space-between; gap: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .hint {
+    position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    background: var(--paper); border: 1px solid var(--line); padding: 6px 10px;
+  }
+  .toggle summary { cursor: pointer; font-size: 13px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+  .toggle summary::after { content: "+"; font-family: var(--font-mono); color: var(--muted); }
+  .toggle[open] summary::after { content: "\2212"; }
+  .toggle dl { margin-top: 10px; }
+  @media (max-width: 560px) {
+    .sheet { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+    h1 { font-size: 18px; }
+    .hint { display: none; }
+  }
+</style>
+
+<div id="stage" aria-label="Interactive 3D model of the restaurant building"></div>
+
+<section class="sheet">
+  <header>
+    <p class="eyebrow">Proposed restaurant development · Client: Sadik Abdi</p>
+    <h1>Restaurant, two storeys with lounge in the roof</h1>
+  </header>
+  <div class="views" role="group" aria-label="View">
+    <button id="v-ext" type="button" aria-pressed="true">Exterior</button>
+    <button id="v-roof" type="button" aria-pressed="false">Roof off</button>
+    <button id="v-gf" type="button" aria-pressed="false">Ground fl.</button>
+    <button id="v-sec" type="button" aria-pressed="false">Section X–X</button>
+  </div>
+  <details class="toggle" id="dims" open>
+    <summary>Key dimensions</summary>
+    <dl>
+      <dt>Footprint (grid E–A × 1–5)</dt><dd>10,000 × 10,000</dd>
+      <dt>Verandah depth</dt><dd>1,200</dd>
+      <dt>First-floor cantilever (A–A1)</dt><dd>500</dd>
+      <dt>Ground floor clear height</dt><dd>3,450</dd>
+      <dt>First-floor slab</dt><dd>150</dd>
+      <dt>Knee wall to eaves</dt><dd>1,500</dd>
+      <dt>Roof pitch</dt><dd>45°</dd>
+      <dt>Ridge above ground</dt><dd>≈ 10,400</dd>
+    </dl>
+  </details>
+  <div class="meta"><span>AU/PL05/2026.08</span><span>Dimensions in mm</span></div>
+</section>
+
+<div class="hint">Drag to orbit · Scroll to zoom · Right-drag to pan</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="building.js"></script>
+<script>
+(function () {
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.localClippingEnabled = true;
+  stage.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 400);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.maxPolarAngle = Math.PI * 0.495;
+  controls.minDistance = 4;
+  controls.maxDistance = 80;
+
+  scene.add(new THREE.HemisphereLight(0xf2f6ff, 0x8a8470, 0.75));
+  const sun = new THREE.DirectionalLight(0xfff3df, 1.0);
+  sun.position.set(-14, 22, 18);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, near: 1, far: 70 });
+  sun.shadow.bias = -0.0004;
+  sun.target.position.set(5, 3, 5);
+  scene.add(sun, sun.target);
+
+  const model = window.buildRestaurant(THREE);
+  scene.add(model.root);
+
+  // Background follows the page theme
+  function themeSky() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--sky').trim() || '#dfe7ea';
+    scene.background = new THREE.Color(v);
+    scene.fog = new THREE.Fog(scene.background, 60, 140);
+  }
+  themeSky();
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeSky); } catch (e) {}
+  new MutationObserver(themeSky).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // Section X-X: cut on the line between grids C and B, looking west
+  const cut = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 5.8);
+  function setClip(on) {
+    Object.values(model.mats).forEach(m => { m.clippingPlanes = on ? [cut] : []; m.clipShadows = on; m.needsUpdate = true; });
+  }
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let tween = null;
+  const narrow = () => (stage.clientWidth || window.innerWidth) < 600;
+  // Phones get a camera pulled further back so the whole building fits the tall frame
+  function camFor(v) {
+    const t = new THREE.Vector3(...v.target), p = new THREE.Vector3(...v.cam);
+    if (narrow()) p.sub(t).multiplyScalar(1.6).add(t);
+    return [p, t];
+  }
+  function fly(p1, t1) {
+    const p0 = camera.position.clone(), t0 = controls.target.clone();
+    if (reduceMotion) { camera.position.copy(p1); controls.target.copy(t1); return; }
+    tween = { p0, t0, p1, t1, start: performance.now(), dur: 900 };
+  }
+
+  const views = {
+    'v-ext': { roof: true, first: true, clip: false, cam: [-13, 9, 25], target: [5, 4, 5.5] },
+    'v-roof': { roof: false, first: true, clip: false, cam: [-6, 17, 19], target: [5, 3.5, 5] },
+    'v-gf': { roof: false, first: false, clip: false, cam: [-4, 14, 17], target: [5, 1, 5] },
+    'v-sec': { roof: true, first: true, clip: true, cam: [24, 5.5, 5.2], target: [5, 5, 5.2] }
+  };
+  function show(id) {
+    const v = views[id];
+    model.groups.roof.visible = v.roof;
+    model.groups.first.visible = v.first;
+    setClip(v.clip);
+    fly(...camFor(v));
+    Object.keys(views).forEach(k => document.getElementById(k).setAttribute('aria-pressed', String(k === id)));
+    try { localStorage.setItem('restaurant-view', id); } catch (e) {}
+  }
+  Object.keys(views).forEach(id => document.getElementById(id).addEventListener('click', () => show(id)));
+
+  let startView = 'v-ext';
+  try { const s = localStorage.getItem('restaurant-view'); if (s && views[s]) startView = s; } catch (e) {}
+  show(startView); tween = null;
+  const [sp, st] = camFor(views[startView]);
+  camera.position.copy(sp); controls.target.copy(st);
+
+  if (matchMedia('(max-width: 560px)').matches) document.getElementById('dims').open = false;
+
+  function resize() {
+    const w = stage.clientWidth || window.innerWidth, h = stage.clientHeight || window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.fov = w < 600 ? 55 : 40;
+    // Keep the building clear of the title block on wide screens
+    if (w > 900) camera.setViewOffset(w, h, -Math.round(Math.min(380, w * 0.3) / 2), 0, w, h);
+    else camera.clearViewOffset();
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  renderer.setAnimationLoop(now => {
+    if (tween) {
+      const k = Math.min(1, (now - tween.start) / tween.dur), e = ease(k);
+      camera.position.lerpVectors(tween.p0, tween.p1, e);
+      controls.target.lerpVectors(tween.t0, tween.t1, e);
+      if (k === 1) tween = null;
+    }
+    controls.update();
+    renderer.render(scene, camera);
+  });
+})();
+</script>
