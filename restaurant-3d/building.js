@@ -28,6 +28,7 @@
       tile: std(0xc5d0cd, { roughness: 0.5 }),
       roof: std(0x46525b, { metalness: 0.45, roughness: 0.5, side: THREE.DoubleSide }),
       steel: std(0x50575e, { metalness: 0.6, roughness: 0.4 }),
+      brass: std(0xb08d57, { metalness: 0.9, roughness: 0.35 }),
       glass: std(0x9cc7d6, { transparent: true, opacity: 0.3, roughness: 0.05, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide }),
       frame: std(0x2e3337, { metalness: 0.4, roughness: 0.5 }),
       door: std(0x7a4a28),
@@ -125,7 +126,7 @@
         abox(g, mats.frame, axis, door[0] - 0.05, door[0] + 0.05, y0, y0 + 2.4, c - 0.07, c + 0.07);
         abox(g, mats.frame, axis, door[1] - 0.05, door[1] + 0.05, y0, y0 + 2.4, c - 0.07, c + 0.07);
         abox(g, mats.frame, axis, (door[0] + door[1]) / 2 - 0.02, (door[0] + door[1]) / 2 + 0.02, y0, y0 + 2.4, c - 0.07, c + 0.07);
-        abox(g, mats.steel, axis, door[0] + 0.15, door[1] - 0.15, y0 + 1.0, y0 + 1.04, c - 0.1, c + 0.1, 'Door pull');
+        abox(g, mats.brass, axis, door[0] + 0.15, door[1] - 0.15, y0 + 1.0, y0 + 1.04, c - 0.1, c + 0.1, 'Door pull');
       }
     }
 
@@ -148,13 +149,13 @@
         box(g, fabric, bx[0], bx[1], y + 0.45, y + 1.0, z0, z1);
       });
       box(g, mats.wood, cx - 0.35, cx + 0.35, y + 0.71, y + 0.75, z0 + 0.1, z1 - 0.1);
-      box(g, mats.steel, cx - 0.04, cx + 0.04, y, y + 0.71, cz - 0.04, cz + 0.04);
+      box(g, mats.brass, cx - 0.04, cx + 0.04, y, y + 0.71, cz - 0.04, cz + 0.04);
     }
 
     function roundTable(g, cx, cz, y, chairs, fabric) {
       const top = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.04, 24), mats.wood);
       top.position.set(cx, y + 0.73, cz); g.add(shadowy(top));
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.2, 0.71, 12), mats.steel);
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.2, 0.71, 12), mats.brass);
       leg.position.set(cx, y + 0.355, cz); g.add(shadowy(leg));
       for (let i = 0; i < chairs; i++) {
         const t = (i / chairs) * Math.PI * 2 + Math.PI / 4;
@@ -247,7 +248,7 @@
       const z1 = 6.6 - G * (r - 8), z0 = z1 - G, top = GF + R * r;
       box(ground, mats.stone, 0.2, 1.2, top - 0.22, top, z0, z1, 'Stair');
     }
-    const rail = (g, a, b) => rod(g, mats.steel, a, b, 0.022);
+    const rail = (g, a, b) => rod(g, mats.brass, a, b, 0.022);
     rail(ground, [3.0, GF + R + 0.9, 7.6], [1.2, GF + R * 7 + 0.9, 7.6]);
     rail(ground, [1.2, GF + R * 7 + 0.9, 7.6], [1.2, GF + R * 7 + 0.9, 6.6]);
     rail(ground, [1.2, GF + R * 7 + 0.9, 6.6], [1.2, FF + 0.9, 2.1]);
