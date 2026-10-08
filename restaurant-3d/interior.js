@@ -598,7 +598,7 @@
       const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.3, 20), S({ color: 0x000000, emissive: 0xffd09a, emissiveIntensity: 3, emissiveMap: reeds.map }));
       sc.position.set(0.27, GF + 1.42, z); groups.ground.add(sc);
       addBox(groups.ground, F.brass, 0.2, 0.26, GF + 1.25, GF + 1.59, z - 0.02, z + 0.02);
-      const l = new THREE.PointLight(0xffc890, 0.8, 4, 2); l.position.set(0.75, GF + 1.6, z); groups.ground.add(l); lights.push(l);
+      if (z > 5) { const l = new THREE.PointLight(0xffc890, 1.4, 4, 2); l.position.set(0.75, GF + 1.6, 4.55); groups.ground.add(l); lights.push(l); }
     });
 
     // ---------- Top floor: cluster of woven basket pendants (after the reference) ----------
@@ -635,7 +635,7 @@
     basket(7.4, 7.0, 0.36, FF + 2.4, false);
     basket(8.4, 4.6, 0.45, FF + 2.1, true);
     // over the banquette tables along the mural
-    [2.7, 4.66, 6.62, 8.58].forEach((x, k) => basket(x, 1.3, 0.3, FF + 1.75, k % 2 === 0));
+    [2.7, 4.66, 6.62, 8.58].forEach((x, k) => basket(x, 1.3, 0.3, FF + 1.75, k === 1));
 
     // ---------- Ground floor: colourful woven disc lights (after the reference) ----------
     const discCanvas = (() => {
@@ -656,7 +656,7 @@
     const discTex = new THREE.CanvasTexture(discCanvas); discTex.colorSpace = THREE.SRGBColorSpace; discTex.wrapS = THREE.RepeatWrapping;
     const discMat = S({ map: discTex, side: THREE.DoubleSide, roughness: 0.75, emissive: 0xffffff, emissiveMap: discTex, emissiveIntensity: 0.04 });
     const bowlMat = S({ color: 0xb38a4c, metalness: 1, roughness: 0.35, side: THREE.DoubleSide });
-    function disc(x, z, rad, y, tilt) {
+    function disc(x, z, rad, y, tilt, lit) {
       const pts = [];
       for (let k = 0; k <= 12; k++) { const t = k / 12; pts.push(new THREE.Vector2(0.12 + (rad - 0.12) * t, 0.22 * (1 - t) - 0.05 * t * t)); }
       const geo = new THREE.LatheGeometry(pts, 96);
@@ -670,15 +670,15 @@
       glow.rotation.x = Math.PI / 2; glow.position.set(x, y + 0.06, z); groups.ground.add(glow);
       const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, CEIL - (y + 0.22), 6), F.cord);
       cord.position.set(x, (CEIL + y + 0.22) / 2, z); groups.ground.add(cord);
-      const l = new THREE.PointLight(0xffc488, 6, 7, 2); l.position.set(x, y - 0.12, z); groups.ground.add(l); lights.push(l);
+      if (lit !== false) { const l = new THREE.PointLight(0xffc488, 8, 8, 2); l.position.set(x, y - 0.12, z); groups.ground.add(l); lights.push(l); }
     }
     disc(3.2, 6.7, 1.05, CEIL - 0.55, 0.04);
     disc(5.7, 7.3, 1.25, CEIL - 0.7, -0.03);
-    disc(8.2, 6.6, 0.95, CEIL - 0.5, 0.05);
-    disc(2.6, 8.9, 0.8, CEIL - 0.85, -0.05);
+    disc(8.2, 6.6, 0.95, CEIL - 0.5, 0.05, false);
+    disc(2.6, 8.9, 0.8, CEIL - 0.85, -0.05, false);
     disc(4.6, 9.0, 0.9, CEIL - 0.6, 0.03);
     disc(7.0, 8.95, 1.0, CEIL - 0.8, -0.04);
-    disc(9.0, 8.7, 0.65, CEIL - 0.6, 0.06);
+    disc(9.0, 8.7, 0.65, CEIL - 0.6, 0.06, false);
 
     // Woven rattan pendant with a warm lamp inside
     const bellGeo = new THREE.LatheGeometry([
@@ -762,7 +762,7 @@
     });
     [[4.5, 2.4], [6.6, 2.4], [8.7, 1.3], [8.8, 3.8]].forEach(([x, z]) => {
       addBox(groups.ground, F.led, x - 0.5, x + 0.5, CEIL - 0.01, CEIL, z - 0.15, z + 0.15, 'Kitchen light panel');
-      const l = new THREE.PointLight(0xffe2c0, 4, 6, 2); l.position.set(x, CEIL - 0.2, z); groups.ground.add(l); lights.push(l);
+      if (x < 8) { const l = new THREE.PointLight(0xffe2c0, 6, 7, 2); l.position.set(x + 1.0, CEIL - 0.2, z); groups.ground.add(l); lights.push(l); }
     });
 
     // (Silhouette murals removed: walls are kept plain white)
