@@ -174,6 +174,33 @@
       return tex(cv, M, true);
     })();
 
+    // Black and white maze rug (after the booth reference)
+    const maze = (() => {
+      const S = 512, c = 32, cv = paint(S, S, (x, y) => {
+        const cx = (x / c) | 0, cy = (y / c) | 0, lx = x % c, ly = y % c, vert = (cx + cy) % 2 === 0;
+        const t = vert ? lx : ly, line = (t % 8) < 4;
+        return line ? [24, 24, 24] : [236, 233, 226];
+      });
+      return tex(cv, 0.8, true);
+    })();
+    // Woven basket pendant: vertical cane strips with an ochre band and patchwork blocks (alpha gaps)
+    const basketCanvas = (() => {
+      const W = 1024, H = 256, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const ctx = cv.getContext('2d'), r = rng(191);
+      for (let x = 0; x < W; x += 6) {
+        ctx.fillStyle = r() < 0.5 ? '#f0dcb0' : '#e6cc98'; ctx.fillRect(x, 0, 4, H);
+      }
+      const bandTop = H * 0.55;
+      for (let x = 0; x < W; x += 6) { ctx.fillStyle = r() < 0.5 ? '#e39a22' : '#d4861a'; ctx.fillRect(x, bandTop, 4, H - bandTop); }
+      for (let k = 0; k < 14; k++) {
+        const x0 = Math.floor(r() * W / 6) * 6, bw = 30 + Math.floor(r() * 5) * 6, y0 = H * (0.15 + r() * 0.6), bh = 20 + r() * 40;
+        for (let x = x0; x < x0 + bw; x += 6) {
+          for (let y = y0; y < y0 + bh; y += 10) { ctx.fillStyle = ((x + y) / 6 | 0) % 2 ? '#1e1b18' : '#f4efe6'; ctx.fillRect(x, y, 4, 8); }
+        }
+      }
+      return cv;
+    })();
+
     // Candy-stripe upholstery: cream with paired rust pinstripes
     const stripes = (() => {
       const S = 256, n = fbm(S, 32, 3, 151), cream = hex(0xeee4d4), rust = hex(0xa8472c);
@@ -449,6 +476,7 @@
       quarry: S({ map: quarry, roughness: 0.62 }),
       herringbone: P({ map: herringbone, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.2 }),
       stripe: S({ map: stripes, roughness: 0.85 }),
+      rug: S({ map: maze, roughness: 0.95 }),
       floral: S({ map: floral, roughness: 0.8 }),
       velvetOrange: P({ color: 0xb4441f, roughness: 0.8, sheen: 1, sheenColor: new THREE.Color(0xe08a5c), sheenRoughness: 0.45 }),
       marbleWhite: P({ map: whiteMarble, roughness: 0.1, clearcoat: 0.6, clearcoatRoughness: 0.06 }),
@@ -487,7 +515,7 @@
     const swap = new Map([
       [M.plaster, F.earth], [M.concrete, F.sandstone], [M.column, F.sandstone], [M.stone, F.travertine],
       [M.tile, F.quarry], [M.roof, F.roofSheet], [M.dormerClad, F.dormerClad],
-      [M.stripe, F.stripe], [M.floral, F.floral], [M.velvetOrange, F.velvetOrange], [M.marbleWhite, F.marbleWhite], [M.darkWood, F.darkWood], [M.rattan, F.rattan], [M.steel, F.charcoal], [M.brass, F.brass], [M.glass, F.glass],
+      [M.stripe, F.stripe], [M.rug, F.rug], [M.led, F.led], [M.floral, F.floral], [M.velvetOrange, F.velvetOrange], [M.marbleWhite, F.marbleWhite], [M.darkWood, F.darkWood], [M.rattan, F.rattan], [M.steel, F.charcoal], [M.brass, F.brass], [M.glass, F.glass],
       [M.frame, F.charcoal], [M.door, F.walnutDoor], [M.wood, F.walnut], [M.sofaGF, F.velvetTerracotta],
       [M.sofaFF, F.velvetOchre], [M.counter, F.honed], [M.inox, F.inox], [M.leaf, F.leaf], [M.pot, F.clay],
       [M.grass, F.grass], [M.paving, F.pavers], [M.sanitary, F.sanitary]
@@ -500,6 +528,7 @@
       'Service counter': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Cashier desk': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Planter': F.clay,
+      'Booth shell': F.reededWalnut,
       'Restaurant floor (polished stone)': F.herringbone,
       'Kitchen floor (ceramic tiles)': F.checker,
       'Verandah': [F.sandstone, F.sandstone, F.herringbone, F.sandstone, F.sandstone, F.sandstone],
@@ -571,6 +600,42 @@
       addBox(groups.ground, F.brass, 0.2, 0.26, GF + 1.25, GF + 1.59, z - 0.02, z + 0.02);
       const l = new THREE.PointLight(0xffc890, 0.8, 4, 2); l.position.set(0.75, GF + 1.6, z); groups.ground.add(l); lights.push(l);
     });
+
+    // ---------- Top floor: cluster of woven basket pendants (after the reference) ----------
+    const basketTex = new THREE.CanvasTexture(basketCanvas); basketTex.colorSpace = THREE.SRGBColorSpace; basketTex.wrapS = THREE.RepeatWrapping;
+    const basketMat = S({ map: basketTex, alphaTest: 0.3, transparent: false, side: THREE.DoubleSide, roughness: 0.7,
+                          emissive: 0xffb060, emissiveMap: basketTex, emissiveIntensity: 0.18 });
+    const basketPts = [];
+    for (let k = 0; k <= 16; k++) {                       // dome top, straight drum sides
+      const t = k / 16;
+      basketPts.push(t < 0.45 ? new THREE.Vector2(Math.sin(t / 0.45 * Math.PI / 2) * 1.0, 1.0 + 0.55 * Math.cos(t / 0.45 * Math.PI / 2))
+                              : new THREE.Vector2(1.0, 1.0 - (t - 0.45) / 0.55 * 1.0));
+    }
+    basketPts.reverse();
+    const basketGeo = new THREE.LatheGeometry(basketPts, 64);
+    function basket(x, z, rad, bottom, lit) {
+      const m = new THREE.Mesh(basketGeo, basketMat);
+      m.scale.set(rad, rad * 0.95, rad); m.position.set(x, bottom, z);
+      m.userData.keepUV = true; m.castShadow = true; m.name = 'Woven basket pendant'; groups.first.add(m);
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8), F.bulb);
+      bulb.position.set(x, bottom + rad * 0.55, z); groups.first.add(bulb);
+      const top = roofUnder(z) - 0.03, y1 = bottom + rad * 1.5;
+      if (top > y1) {
+        const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, top - y1, 6), F.cord);
+        rod.position.set(x, (top + y1) / 2, z); groups.first.add(rod);
+      }
+      if (lit) { const l = new THREE.PointLight(0xffb868, 7, 8, 2); l.position.set(x, bottom + rad * 0.3, z); groups.first.add(l); lights.push(l); }
+    }
+    // over the S-booth, varying sizes and drops
+    basket(3.6, 5.8, 0.5, FF + 1.95, true);
+    basket(6.2, 5.8, 0.55, FF + 1.9, true);
+    basket(4.9, 5.0, 0.38, FF + 2.45, false);
+    basket(4.95, 6.7, 0.42, FF + 2.3, true);
+    basket(2.5, 4.7, 0.34, FF + 2.5, false);
+    basket(7.4, 7.0, 0.36, FF + 2.4, false);
+    basket(8.4, 4.6, 0.45, FF + 2.1, true);
+    // over the banquette tables along the mural
+    [2.7, 4.66, 6.62, 8.58].forEach((x, k) => basket(x, 1.3, 0.3, FF + 1.75, k % 2 === 0));
 
     // ---------- Ground floor: colourful woven disc lights (after the reference) ----------
     const discCanvas = (() => {

@@ -38,6 +38,8 @@
       marbleWhite: std(0xf2f0eb, { roughness: 0.2 }),
       darkWood: std(0x3a2416, { roughness: 0.5 }),
       rattan: std(0xb07a45),
+      rug: std(0xdddddd),
+      led: std(0x000000, { emissive: 0xffb466, emissiveIntensity: 3 }),
       glass: std(0x9cc7d6, { transparent: true, opacity: 0.3, roughness: 0.05, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide }),
       frame: std(0x2e3337, { metalness: 0.4, roughness: 0.5 }),
       door: std(0x7a4a28),
@@ -424,6 +426,52 @@
       const c = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 14), mats.floral);
       c.scale.set(1, 0.95, 0.35); c.position.set(x, FF + 0.66, BZ + 0.24); c.rotation.z = (k % 2 ? 0.25 : -0.2);
       c.name = 'Cushion'; first.add(shadowy(c));
+    });
+
+    // Lounge centre: serpentine (S-shaped) booth from two half-ring booths, terracotta channel-tufted
+    // upholstery in a reeded walnut shell, a round table in each curve, rattan armchairs and round rugs
+    function ringSector(g, mat, rIn, rOut, a0, a1, y0, h, cx, cz, name) {
+      const sh = new THREE.Shape();
+      sh.moveTo(rOut * Math.cos(a0), rOut * Math.sin(a0));
+      sh.absarc(0, 0, rOut, a0, a1, false);
+      sh.lineTo(rIn * Math.cos(a1), rIn * Math.sin(a1));
+      sh.absarc(0, 0, rIn, a1, a0, true);
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: h, bevelEnabled: false, curveSegments: 40 });
+      geo.rotateX(-Math.PI / 2);                         // shape (x, y) -> world (x, -z); extrusion -> up
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(cx, y0, cz); m.name = name;
+      g.add(shadowy(m)); return m;
+    }
+    const SR = 1.3, SZ = 5.8, SC = [[3.6, Math.PI, 2 * Math.PI], [3.6 + 2 * SR, 0, Math.PI]];
+    SC.forEach(([cx, a0, a1]) => {
+      ringSector(first, mats.wood, SR - 0.08, SR, a0, a1, FF, 1.05, cx, SZ, 'Booth shell');
+      ringSector(first, mats.sofaGF, SR - 0.24, SR - 0.08, a0, a1, FF + 0.42, 0.6, cx, SZ, 'Booth back');
+      ringSector(first, mats.sofaGF, SR - 0.78, SR - 0.08, a0, a1, FF, 0.44, cx, SZ, 'Booth seat');
+      ringSector(first, mats.led, SR, SR + 0.02, a0, a1, FF + 0.01, 0.025, cx, SZ, 'Booth glow');
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.04, 40), mats.wood);
+      top.position.set(cx, FF + 0.74, SZ); top.name = 'Booth table'; first.add(shadowy(top));
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.14, 0.72, 20), mats.frame);
+      ped.position.set(cx, FF + 0.36, SZ); first.add(shadowy(ped));
+      const rug = new THREE.Mesh(new THREE.CylinderGeometry(1.9, 1.9, 0.01, 64), mats.rug);
+      rug.position.set(cx, FF + 0.005, SZ); rug.name = 'Rug'; first.add(shadowy(rug, false));
+      // two rattan armchairs on the open side, facing the booth
+      const open = a0 === 0 ? 1 : -1;                    // +z (south) for the second, -z (north) for the first
+      [-0.5, 0.5].forEach(dx => {
+        const ch = new THREE.Group();
+        box(ch, mats.rattan, -0.34, 0.34, 0.0, 0.42, -0.32, 0.32, 'Armchair');
+        box(ch, mats.rattan, -0.34, 0.34, 0.42, 0.78, 0.22, 0.32, 'Armchair');
+        box(ch, mats.rattan, -0.34, -0.26, 0.42, 0.62, -0.32, 0.32, 'Armchair');
+        box(ch, mats.rattan, 0.26, 0.34, 0.42, 0.62, -0.32, 0.32, 'Armchair');
+        box(ch, mats.stripe, -0.26, 0.26, 0.42, 0.52, -0.3, 0.22, 'Armchair cushion');
+        ch.position.set(cx + dx * 1.05, FF, SZ + open * 0.95);
+        ch.rotation.y = (open > 0 ? 0 : Math.PI) + dx * -0.7 * open;
+        first.add(ch);
+      });
+    });
+    // planters closing each end of the S
+    [[3.6 - SR - 0.3, SZ], [3.6 + 3 * SR + 0.3, SZ]].forEach(([x, z]) => {
+      box(first, mats.frame, x - 0.25, x + 0.25, FF, FF + 0.55, z - 0.25, z + 0.25, 'Planter box');
+      plant(first, x, z, FF + 0.55, 0.8);
     });
 
     // Planter boxes on the 500 mm cantilever

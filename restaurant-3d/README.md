@@ -43,6 +43,8 @@ A glazed box dormer sits on the front roof slope. It's 5.0 m wide (2,400 | 5,000
 - **Lounge:** a hand‑painted‑style botanical mural (big leaves over arches) on the back knee wall, lit by the LED cove above it.
 - **Basin lobby under the stair:** a red marble vanity with a reeded walnut base and brass taps, a round mirror with a brass bead frame, fluted‑glass sconces and leaf wallpaper.
 - **Lounge seating:** a long candy‑stripe banquette along the mural wall, with rattan ends and floral cushions. In front of it are eight round white‑marble bistro tables on turned dark‑wood pedestals with brass feet, and orange velvet chairs with floral backs.
+- **Lounge centre:** a serpentine S‑booth (two half‑ring booths) in terracotta channel‑tufted velvet, with a reeded walnut shell and a warm light strip at the base. Each curve has a round walnut table on a black pedestal and two rattan armchairs, on black and white maze rugs, with planters at both ends.
+- **Top‑floor lighting:** a cluster of woven basket pendants (cream cane with an ochre band and black and white patchwork) over the S‑booth, plus smaller ones over the banquette tables.
 - **Skylight:** removed. The back roof slope is one continuous sheet.
 - **Ground‑floor lights:** seven colourful woven disc pendants with brass centres over the restaurant.
 
