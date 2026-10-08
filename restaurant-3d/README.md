@@ -39,7 +39,7 @@ A glazed box dormer sits on the front roof slope. It's 5.0 m wide (2,400 | 5,000
 
 ## Finishes and lighting (latest)
 
-- **Ground floor:** black and white marble laid diagonally throughout, including the restaurant, kitchen, walkway, W.C.s and verandah.
+- **Ground floor:** oak herringbone (90 × 450 mm planks at 45°) in the restaurant and on the verandah. Diagonal black and white marble is kept in the back of house: the W.C.s, the walkway and the basin lobby, up to the end of the vanity under the stair, where a brass threshold strip marks the change. The kitchen floor also stays black and white marble.
 - **Lounge:** a hand‑painted‑style botanical mural (big leaves over arches) on the back knee wall, lit by the LED cove above it.
 - **Basin lobby under the stair:** a red marble vanity with a reeded walnut base and brass taps, a round mirror with a brass bead frame, fluted‑glass sconces and leaf wallpaper.
 - **Lounge seating:** a long candy‑stripe banquette along the mural wall, with rattan ends and floral cushions. In front of it are eight round white‑marble bistro tables on turned dark‑wood pedestals with brass feet, and orange velvet chairs with floral backs.

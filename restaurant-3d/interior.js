@@ -145,6 +145,35 @@
       return { map: tex(col, 1.6, true), normal: tex(normalFromHeight(h, S, 1.0), 1.6) };
     })();
 
+    // Oak herringbone, 90 x 450 mm planks laid at 45 deg; one 10 m texture so the pattern never repeats on the floor
+    const herringbone = (() => {
+      const N = 2048, M = 10, px = N / M, w = 0.09 * px, k = 5, cv = document.createElement('canvas');
+      cv.width = cv.height = N;
+      const ctx = cv.getContext('2d'), r = rng(181);
+      ctx.fillStyle = '#5c3e26'; ctx.fillRect(0, 0, N, N);
+      ctx.translate(N / 2, N / 2); ctx.rotate(Math.PI / 4);
+      const tones = ['#a8744a', '#b5814f', '#9c6a42', '#c18d5a', '#ae7a4c', '#93633c'];
+      const plank = (x, y, pw, ph, horiz) => {
+        ctx.fillStyle = tones[Math.floor(r() * tones.length)];
+        ctx.fillRect(x * w + 0.6, y * w + 0.6, pw * w - 1.2, ph * w - 1.2);
+        ctx.strokeStyle = 'rgba(70,40,20,0.22)'; ctx.lineWidth = 0.8;
+        for (let g = 0; g < 3; g++) {
+          const o = 0.2 + r() * 0.6; ctx.beginPath();
+          if (horiz) { ctx.moveTo(x * w + 2, (y + o) * w); ctx.lineTo((x + pw) * w - 2, (y + o + (r() - 0.5) * 0.15) * w); }
+          else { ctx.moveTo((x + o) * w, y * w + 2); ctx.lineTo((x + o + (r() - 0.5) * 0.15) * w, (y + ph) * w - 2); }
+          ctx.stroke();
+        }
+      };
+      const span = Math.ceil(N * 0.75 / w);
+      for (let m = -span; m <= span; m++) for (let n = -2 * span; n <= 2 * span; n++) {
+        const ox = n + m * k, oy = n - m * k;
+        if (Math.abs(ox) > 2 * span || Math.abs(oy) > 2 * span) continue;
+        plank(ox, oy, k, 1, true);                 // horizontal plank
+        plank(ox + k, oy - k + 1, 1, k, false);    // vertical plank tucked against its end
+      }
+      return tex(cv, M, true);
+    })();
+
     // Candy-stripe upholstery: cream with paired rust pinstripes
     const stripes = (() => {
       const S = 256, n = fbm(S, 32, 3, 151), cream = hex(0xeee4d4), rust = hex(0xa8472c);
@@ -418,6 +447,7 @@
       travertine: S({ map: travertine.map, roughnessMap: travertine.rough, normalMap: travertine.normal, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 1 }),
       checker: P({ map: checker.map, normalMap: checker.normal, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 0.14, clearcoat: 0.5, clearcoatRoughness: 0.08 }),
       quarry: S({ map: quarry, roughness: 0.62 }),
+      herringbone: P({ map: herringbone, roughness: 0.42, clearcoat: 0.35, clearcoatRoughness: 0.2 }),
       stripe: S({ map: stripes, roughness: 0.85 }),
       floral: S({ map: floral, roughness: 0.8 }),
       velvetOrange: P({ color: 0xb4441f, roughness: 0.8, sheen: 1, sheenColor: new THREE.Color(0xe08a5c), sheenRoughness: 0.45 }),
@@ -470,10 +500,10 @@
       'Service counter': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Cashier desk': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Planter': F.clay,
-      'Restaurant floor (polished stone)': F.checker,
+      'Restaurant floor (polished stone)': F.herringbone,
       'Kitchen floor (ceramic tiles)': F.checker,
-      'Verandah': [F.sandstone, F.sandstone, F.checker, F.sandstone, F.sandstone, F.sandstone],
-      'Entrance step': [F.sandstone, F.sandstone, F.checker, F.sandstone, F.sandstone, F.sandstone],
+      'Verandah': [F.sandstone, F.sandstone, F.herringbone, F.sandstone, F.sandstone, F.sandstone],
+      'Entrance step': [F.sandstone, F.sandstone, F.herringbone, F.sandstone, F.sandstone, F.sandstone],
       'Vanity base': [F.reededWalnut, F.reededWalnut, F.reededWalnut, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Vanity top': F.redMarble,
       'Basin': F.basinMarble,
@@ -495,6 +525,11 @@
       m.name = name || ''; m.castShadow = mat !== F.led; m.receiveShadow = true;
       g.add(m); return m;
     }
+
+    // Black and white marble kept in the back-of-house zone: W.Cs, walkway and the basin lobby
+    // (to the end of the vanity under the stair), with a brass threshold strip onto the herringbone
+    addBox(groups.ground, F.checker, 0.2, 2.2, GF + 0.011, GF + 0.016, 0.2, 5.3, 'Back-of-house tiling');
+    addBox(groups.ground, F.brass, 0.2, 2.2, GF + 0.011, GF + 0.018, 5.3, 5.32, 'Threshold strip');
 
     // ---------- Lounge: botanical mural on the back (north) knee wall ----------
     const loungeMural = new THREE.CanvasTexture(botanical(3072, 470, 23, {
