@@ -23,12 +23,13 @@
 
     const std = (color, o) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.85, metalness: 0 }, o || {}));
     const mats = {
-      plaster: std(0xece6da),
+      plaster: std(0xf3f1ec),
+      dormerClad: std(0x33363a, { metalness: 0.45, roughness: 0.5 }),
       concrete: std(0xb3ada2),
       column: std(0xd8c4a0),
       stone: std(0xd8d0c2, { roughness: 0.45 }),
       tile: std(0xc5d0cd, { roughness: 0.5 }),
-      roof: std(0x46525b, { metalness: 0.45, roughness: 0.5, side: THREE.DoubleSide }),
+      roof: std(0x7d7e7c, { metalness: 0.45, roughness: 0.5, side: THREE.DoubleSide }),
       steel: std(0x50575e, { metalness: 0.6, roughness: 0.4 }),
       brass: std(0xb08d57, { metalness: 0.9, roughness: 0.35 }),
       glass: std(0x9cc7d6, { transparent: true, opacity: 0.3, roughness: 0.05, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide }),
@@ -65,10 +66,10 @@
 
     // Round bar between two points (railings, truss members, mullions on slopes)
     const UP = new THREE.Vector3(0, 1, 0);
-    function rod(g, mat, a, b, r) {
+    function rod(g, mat, a, b, r, seg) {
       const A = new THREE.Vector3(a[0], a[1], a[2]), B = new THREE.Vector3(b[0], b[1], b[2]);
       const dir = B.clone().sub(A), len = dir.length();
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), mat);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, seg || 8), mat);
       m.position.copy(A).add(B).multiplyScalar(0.5);
       m.quaternion.setFromUnitVectors(UP, dir.normalize());
       g.add(shadowy(m));
@@ -218,48 +219,39 @@
     // Storage room
     wall(ground, 'z', 0.2, 2.5, 7.5, 7.7, GF, CEIL);
     wall(ground, 'x', 7.7, 9.8, 2.5, 2.7, GF, CEIL, [{ a: 8.3, b: 9.1, s: GF, h: 2.4, k: 'door' }]);
-    // W.C block (ceiling at 2.7 m so the stair can pass over it)
-    const WC_TOP = 2.8;
-    wall(ground, 'z', 0.2, 3.0, 1.2, 1.4, GF, WC_TOP, [
-      { a: 0.7, b: 1.35, s: GF, h: 2.4, k: 'door' }, { a: 2.1, b: 2.75, s: GF, h: 2.4, k: 'door' }
+    // W.C block (revised ground floor): two W.Cs and a basin lobby under the stair, ceiling at 2.4 m
+    const WC_TOP = GF + 2.1;
+    wall(ground, 'z', 0.2, 3.8, 1.2, 1.35, GF, WC_TOP, [
+      { a: 0.9, b: 1.6, s: GF, h: 2.1, k: 'door' }, { a: 2.7, b: 3.4, s: GF, h: 2.1, k: 'door' }
     ]);
-    box(ground, mats.plaster, 0.2, 1.2, GF, WC_TOP, 1.5, 1.6);
-    box(ground, mats.plaster, 0.2, 1.4, GF, WC_TOP, 2.9, 3.0);
-    box(ground, mats.plaster, 0.2, 1.4, WC_TOP, WC_TOP + 0.1, 0.2, 3.0, 'W.C ceiling');
+    box(ground, mats.plaster, 0.2, 1.2, GF, WC_TOP, 1.8, 2.0);
+    box(ground, mats.plaster, 0.2, 1.2, GF, WC_TOP, 3.6, 3.8);
+    box(ground, mats.plaster, 0.2, 1.35, WC_TOP, WC_TOP + 0.1, 0.2, 3.8, 'W.C ceiling');
 
     // R.C columns
-    const colsGF = [[0.1, 0.1], [2.3, 0.1], [5.0, 0.1], [9.9, 0.1], [0.1, 5.0], [2.3, 5.0], [5.0, 5.0], [9.9, 5.0], [0.1, 9.9], [5.0, 9.9], [9.9, 9.9]];
+    const colsGF = [[0.1, 0.1], [2.3, 0.1], [5.0, 0.1], [9.9, 0.1], [0.1, 5.0], [2.3, 5.0], [9.9, 5.0], [0.1, 9.9], [9.9, 9.9]];
     colsGF.forEach(([x, z]) => box(ground, mats.column, x - 0.11, x + 0.11, GF, CEIL, z - 0.11, z + 0.11, 'R.C column'));
 
     // Shopfront glazing to the verandah (grid 5) and the east side of the restaurant
-    curtain(ground, 'x', 0.2, 4.89, 9.9, GF, 3.45, 1.2);
-    curtain(ground, 'x', 5.11, 9.79, 9.9, GF, 3.45, 1.15, [6.3, 7.9]);
+    // Front (grid 5) left fully open to the verandah: no glazing or doors
     curtain(ground, 'z', 5.11, 9.79, 9.9, GF, 3.45, 1.15);
     // 450 x 200 R.C beams over the glazing
     box(ground, mats.column, 0, 10, 3.45, CEIL, 9.8, 10, 'R.C beam');
     box(ground, mats.column, 9.8, 10, 3.45, CEIL, 5.0, 10, 'R.C beam');
 
-    // Staircase: 23 risers x 157 mm, quarter landing, mild steel railing
-    const R = (FF - GF) / 23, G = 0.3;
-    for (let i = 1; i <= 6; i++) {
-      const x1 = 3.0 - G * (i - 1), x0 = x1 - G;
-      box(ground, mats.stone, x0, x1, GF, GF + R * i, 6.6, 7.6, 'Stair');
+    // Staircase (revised plans): one straight flight up the west wall, 24 risers x 150 mm,
+    // first riser on grid 5 at the open front, arriving on the first floor at grid 2
+    const NR = 24, R = (FF - GF) / NR, SZ0 = 9.8, SZ1 = 2.0, G = (SZ0 - SZ1) / (NR - 1);
+    for (let r = 1; r < NR; r++) {
+      const z1 = SZ0 - G * (r - 1), z0 = z1 - G, top = GF + R * r;
+      box(ground, mats.stone, 0.2, 1.2, Math.max(GF, top - 0.24), top, z0, z1, 'Stair');
     }
-    box(ground, mats.stone, 0.2, 1.2, GF, GF + R * 7, 6.6, 7.6, 'Stair landing');
-    for (let r = 8; r <= 22; r++) {
-      const z1 = 6.6 - G * (r - 8), z0 = z1 - G, top = GF + R * r;
-      box(ground, mats.stone, 0.2, 1.2, top - 0.22, top, z0, z1, 'Stair');
-    }
+    // Raking steel stringer under the open (east) side
+    rod(ground, mats.steel, [1.18, GF + 0.02, SZ0], [1.18, FF - 0.12, SZ1], 0.05);
     const rail = (g, a, b) => rod(g, mats.brass, a, b, 0.022);
-    rail(ground, [3.0, GF + R + 0.9, 7.6], [1.2, GF + R * 7 + 0.9, 7.6]);
-    rail(ground, [1.2, GF + R * 7 + 0.9, 7.6], [1.2, GF + R * 7 + 0.9, 6.6]);
-    rail(ground, [1.2, GF + R * 7 + 0.9, 6.6], [1.2, FF + 0.9, 2.1]);
-    for (let i = 0; i <= 6; i++) {
-      const x = 3.0 - 0.3 * i, y = GF + R * (i + 1);
-      rail(ground, [x, y, 7.6], [x, y + 0.9, 7.6]);
-    }
-    for (let r = 8; r <= 22; r += 1) {
-      const z = 6.6 - G * (r - 8) - 0.15, y = GF + R * r;
+    rail(ground, [1.2, GF + R + 0.9, SZ0 - G / 2], [1.2, FF + 0.9, SZ1 + G / 2]);
+    for (let r = 1; r < NR; r += 2) {
+      const z = SZ0 - G * (r - 0.5), y = GF + R * r;
       rail(ground, [1.2, y, z], [1.2, y + 0.9, z]);
     }
 
@@ -277,9 +269,10 @@
     box(ground, mats.glass, 3.25, 3.95, GF + 1.05, GF + 1.5, 4.4, 4.85, 'Cake display');
     box(ground, mats.wood, 8.2, 9.6, GF, GF + 1.0, 4.1, 4.6, 'Cashier desk');
     // W.C fittings
-    box(ground, mats.sanitary, 0.5, 0.9, GF, GF + 0.42, 0.25, 0.85, 'W.C');
-    box(ground, mats.sanitary, 0.5, 0.9, GF, GF + 0.42, 1.65, 2.25, 'W.C');
-    box(ground, mats.sanitary, 0.25, 0.55, GF + 0.75, GF + 0.9, 3.4, 3.9, 'Wash hand basin');
+    box(ground, mats.sanitary, 0.45, 0.85, GF, GF + 0.42, 0.25, 0.85, 'W.C');
+    box(ground, mats.sanitary, 0.45, 0.85, GF, GF + 0.42, 2.05, 2.65, 'W.C');
+    box(ground, mats.sanitary, 0.22, 0.55, GF + 0.75, GF + 0.9, 3.95, 4.45, 'Wash hand basin');
+    box(ground, mats.sanitary, 0.22, 0.55, GF + 0.75, GF + 0.9, 4.65, 5.15, 'Wash hand basin');
     // Restaurant
     if (furnished) {
     booth(ground, 3.0, 9.15, GF, mats.sofaGF);
@@ -292,7 +285,7 @@
 
     // ---------- First floor ----------
     // 150 mm slab, cantilevered 500 mm past grid A, with the stair void
-    const VOID = { x0: 0.2, x1: 1.25, z0: 2.1, z1: 6.6 };
+    const VOID = { x0: 0.2, x1: 1.25, z0: 2.0, z1: 6.8 };
     box(first, mats.stone, 0, 10.5, CEIL, FF, 0, VOID.z0, 'First floor slab');
     box(first, mats.stone, 0, 10.5, CEIL, FF, VOID.z1, 10, 'First floor slab');
     box(first, mats.stone, 0, VOID.x0, CEIL, FF, VOID.z0, VOID.z1, 'First floor slab');
@@ -304,7 +297,8 @@
     for (let x = VOID.x0 + 0.3; x < VOID.x1; x += 0.3) rail(first, [x, FF, VOID.z1], [x, FF + 1.0, VOID.z1]);
 
     // Glazed dormer on the front slope (Revised Elevation 02): grid C1 to B1, head 2,630 above first floor
-    const DX0 = 2.75, DX1 = 7.15;                        // just outside grids C1 (2.8) and B1 (7.0)
+    const DX0 = 2.4, DX1 = 7.4;                          // 2,400 | 5,000 | 2,400 on the revised first floor
+    const DF = 11.2;                                     // front pushed 1.2 m past grid 5, to grid 6
     const DHEAD = FF + 2.63;
     const DZB = RIDGE_Z + (RIDGE - DHEAD) - 0.05;        // where the dormer roof meets the main slope
 
@@ -313,13 +307,15 @@
     wall(first, 'x', 0, DX0, 9.8, 10, FF, EAVE);
     wall(first, 'x', DX1, 10, 9.8, 10, FF, EAVE);
 
+    // Dormer floor cantilevers 1.2 m over the verandah
+    box(first, mats.stone, DX0, DX1, CEIL, FF, 10, DF, 'First floor slab');
     // Dormer front: chunky portal frame, four glazed bays and a guarding transom
-    box(first, mats.column, DX0, DX0 + 0.2, FF, DHEAD, 9.95, 10.2, 'Dormer frame');
-    box(first, mats.column, DX1 - 0.2, DX1, FF, DHEAD, 9.95, 10.2, 'Dormer frame');
-    box(first, mats.column, DX0, DX1, DHEAD - 0.2, DHEAD, 9.95, 10.2, 'Dormer frame');
-    box(first, mats.column, DX0, DX1, FF - 0.05, FF + 0.06, 9.95, 10.2, 'Dormer frame');
-    curtain(first, 'x', DX0 + 0.2, DX1 - 0.2, 10.05, FF + 0.06, DHEAD - 0.2, 1.0);
-    box(first, mats.frame, DX0 + 0.2, DX1 - 0.2, FF + 1.05, FF + 1.11, 10.0, 10.1, 'Dormer transom');
+    box(first, mats.column, DX0, DX0 + 0.2, CEIL, DHEAD, DF - 0.05, DF + 0.2, 'Dormer frame');
+    box(first, mats.column, DX1 - 0.2, DX1, CEIL, DHEAD, DF - 0.05, DF + 0.2, 'Dormer frame');
+    box(first, mats.column, DX0, DX1, DHEAD - 0.2, DHEAD, DF - 0.05, DF + 0.2, 'Dormer frame');
+    box(first, mats.column, DX0, DX1, CEIL - 0.05, FF + 0.06, DF - 0.05, DF + 0.2, 'Dormer frame');
+    curtain(first, 'x', DX0 + 0.2, DX1 - 0.2, DF + 0.05, FF + 0.06, DHEAD - 0.2, 1.0);
+    box(first, mats.frame, DX0 + 0.2, DX1 - 0.2, FF + 1.05, FF + 1.11, DF, DF + 0.1, 'Dormer transom');
 
     // West gable wall: pentagon in the (z, y) plane, 200 mm thick
     function gableShape(inset) {
@@ -354,8 +350,7 @@
 
     // R.C columns and beam on grid 3 carrying the trusses
     const BEAM_Y = FF + 3.2;
-    [0.1, 2.3, 5.0, 9.9].forEach(x => box(first, mats.column, x - 0.11, x + 0.11, FF, BEAM_Y, RIDGE_Z - 0.11, RIDGE_Z + 0.11, 'R.C column'));
-    box(first, mats.column, 0.1, 9.9, BEAM_Y, BEAM_Y + 0.2, RIDGE_Z - 0.1, RIDGE_Z + 0.1, 'R.C beam');
+    // (Grid 3 columns and beam removed: the lounge is clear-span under the trusses)
 
     // Lounge furniture
     if (furnished) {
@@ -426,18 +421,20 @@
     }
 
     // Dormer roof (shallow fall to the front, standing seams) and clad cheeks
-    const droof = box(roof, mats.roof, DX0 - 0.12, DX1 + 0.12, DHEAD, DHEAD + 0.16, DZB - 0.1, 10.45, 'Dormer roof');
+    const droof = box(roof, mats.dormerClad, DX0 - 0.12, DX1 + 0.12, DHEAD, DHEAD + 0.16, DZB - 0.1, DF + 0.45, 'Dormer roof');
     droof.rotation.x = 0.04;
-    for (let z = DZB + 0.15; z < 10.4; z += 0.3) box(roof, mats.roof, DX0 - 0.12, DX1 + 0.12, DHEAD + 0.16, DHEAD + 0.2, z - 0.015, z + 0.015);
+    for (let z = DZB + 0.15; z < DF + 0.4; z += 0.3) box(roof, mats.dormerClad, DX0 - 0.12, DX1 + 0.12, DHEAD + 0.16, DHEAD + 0.2, z - 0.015, z + 0.015);
     function cheek(x0) {
       const s = new THREE.Shape();
       s.moveTo(DZB, DHEAD);
-      s.lineTo(10.2, DHEAD);
-      s.lineTo(10.2, roofUnder(10.2) - 0.05);
+      s.lineTo(DF + 0.2, DHEAD);
+      s.lineTo(DF + 0.2, CEIL - 0.05);
+      s.lineTo(10, CEIL - 0.05);
+      s.lineTo(10, EAVE);
       s.closePath();
       const geo = new THREE.ExtrudeGeometry(s, { depth: 0.18, bevelEnabled: false });
       geo.rotateY(-Math.PI / 2);
-      const m = new THREE.Mesh(geo, mats.roof);
+      const m = new THREE.Mesh(geo, mats.dormerClad);
       m.position.x = x0 + 0.18; m.name = 'Dormer cheek';
       roof.add(shadowy(m));
     }
@@ -454,17 +451,17 @@
     const tz = BEAM_Y + 0.2 - EAVE;        // where the bottom chord meets the slope
     [0.3, 2.3, 5.0, 7.6, 9.7].forEach(x => {
       const yB = BEAM_Y + 0.2;
-      const r = 0.035, m = mats.steel;
-      rod(roof, m, [x, yB, tz], [x, yB, 10 - tz], r);
-      rod(roof, m, [x, EAVE, 0.1], [x, RIDGE - 0.05, RIDGE_Z], r);
-      if (x > DX0 && x < DX1) rod(roof, m, [x, RIDGE - DD, DZB], [x, RIDGE - 0.05, RIDGE_Z], r);
-      else rod(roof, m, [x, EAVE, 9.9], [x, RIDGE - 0.05, RIDGE_Z], r);
-      rod(roof, m, [x, yB, RIDGE_Z], [x, RIDGE - 0.05, RIDGE_Z], r);
+      const r = 0.075, m = mats.steel;
+      rod(roof, m, [x, yB, tz], [x, yB, 10 - tz], r, 4);
+      rod(roof, m, [x, EAVE, 0.1], [x, RIDGE - 0.05, RIDGE_Z], r, 4);
+      if (x > DX0 && x < DX1) rod(roof, m, [x, RIDGE - DD, DZB], [x, RIDGE - 0.05, RIDGE_Z], r, 4);
+      else rod(roof, m, [x, EAVE, 9.9], [x, RIDGE - 0.05, RIDGE_Z], r, 4);
+      rod(roof, m, [x, yB, RIDGE_Z], [x, RIDGE - 0.05, RIDGE_Z], r, 4);
       const za = (tz + RIDGE_Z) / 2, zb = 10 - za;
-      rod(roof, m, [x, yB, za], [x, roofUnder(za), za], r);
-      rod(roof, m, [x, yB, zb], [x, roofUnder(zb), zb], r);
-      rod(roof, m, [x, roofUnder(za), za], [x, yB, RIDGE_Z], r);
-      rod(roof, m, [x, roofUnder(zb), zb], [x, yB, RIDGE_Z], r);
+      rod(roof, m, [x, yB, za], [x, roofUnder(za), za], r, 4);
+      rod(roof, m, [x, yB, zb], [x, roofUnder(zb), zb], r, 4);
+      rod(roof, m, [x, roofUnder(za), za], [x, yB, RIDGE_Z], r, 4);
+      rod(roof, m, [x, roofUnder(zb), zb], [x, yB, RIDGE_Z], r, 4);
     });
 
     return { root: all, groups: { site, ground, first, roof }, mats, levels: { GF, FF, EAVE, RIDGE } };

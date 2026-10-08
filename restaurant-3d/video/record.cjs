@@ -17,7 +17,7 @@ const THREE_DIR = process.env.THREE_DIR || path.join(__dirname, 'node_modules/th
 const PAGE = path.join(__dirname, '..', 'index.html');
 
 // ---------- camera route ----------
-const GF = 0.3, FF = 3.9, R = (FF - GF) / 23;
+const GF = 0.3, FF = 3.9, SR = (FF - GF) / 24, SG = 7.8 / 23;
 const orbit = (deg, r, h) => { const a = deg * Math.PI / 180; return [5 + r * Math.sin(a), h, 5.6 + r * Math.cos(a)]; };
 const shots = [
   { name: 'arrival', dur: 14, fov: 40, exp: [0.72, 0.75],
@@ -27,7 +27,7 @@ const shots = [
   { name: 'dormer', dur: 6, fov: 38, exp: [0.75, 0.75],
     cam: [[7.5, 2.2, 21.5], [5.6, 3.6, 19.5], [5.0, 4.6, 17.5]],
     target: [[5.6, 4.8, 9.5], [5.0, 5.3, 9.5], [4.95, 5.5, 9.5]],
-    title: ['Glazed roof dormer', 'Grids C1 to B1', 0.8, 5.0] },
+    title: ['Glazed roof dormer', '5.0 m wide, 1.2 m out over the verandah', 0.8, 5.0] },
   { name: 'restaurant', dur: 12, fov: 56, exp: [0.78, 0.95], expAt: [0.25, 0.45],
     cam: [[7.1, 1.65, 14.5], [7.1, 1.65, 11.4], [7.1, 1.66, 9.4], [7.35, 1.68, 7.9], [8.4, 1.7, 6.3], [8.9, 1.72, 5.7]],
     target: [[7.1, 1.55, 6], [7.0, 1.5, 4], [6.0, 1.45, 4.5], [4.0, 1.4, 6.5], [2.2, 1.4, 8.6], [1.8, 1.4, 9.0]],
@@ -36,14 +36,14 @@ const shots = [
     cam: [[1.8, 1.62, 6.3], [1.8, 1.62, 4.6], [1.8, 1.6, 2.4]],
     target: [[1.8, 1.0, 0.2], [1.8, 1.0, 0.0], [1.75, 1.05, -0.5]],
     title: ['Walkway', 'Checkered tiling to the back of house', 1.0, 7.5] },
-  { name: 'stair', dur: 10, fov: 60, exp: [1.1, 1.0],
-    cam: [[3.7, GF + 1.6, 7.1], [2.2, GF + R * 4 + 1.6, 7.1], [0.75, GF + R * 7 + 1.6, 7.0],
-          [0.72, GF + R * 13 + 1.6, 5.0], [0.72, GF + R * 20 + 1.6, 3.0], [1.0, FF + 1.5, 1.9]],
-    target: [[0.5, 2.6, 7.1], [0.4, 3.2, 6.0], [0.7, 3.6, 3.5], [0.75, 5.0, 1.0], [1.6, 5.6, 0.5], [6.0, 5.4, 3.5]],
-    title: ['Staircase', 'Up to the lounge', 1.0, 8.0] },
+  { name: 'stair', dur: 10, fov: 60, exp: [1.05, 1.0],
+    cam: [[0.72, GF + 1.65, 11.2], [0.72, GF + 1.65, 10.2], [0.72, GF + SR * 8 + 1.6, 9.8 - SG * 7.5],
+          [0.72, GF + SR * 16 + 1.6, 9.8 - SG * 15.5], [0.75, FF + 1.45, 1.8], [1.4, FF + 1.45, 1.6]],
+    target: [[0.72, 2.2, 5.0], [0.72, 2.8, 5.0], [0.72, 3.8, 3.0], [0.72, 5.0, 0.5], [2.5, 5.4, 1.5], [8.0, 5.4, 6.0]],
+    title: ['Staircase', 'One straight flight up the west wall', 1.0, 8.0] },
   { name: 'lounge', dur: 13, fov: 60, exp: [1.05, 1.0],
     cam: [[1.7, 5.4, 2.4], [3.4, 5.38, 4.0], [4.1, 5.36, 4.8], [6.0, 5.35, 7.6], [7.4, 5.35, 8.0]],
-    target: [[8.5, 5.6, 5.0], [9.0, 5.7, 7.0], [1.0, 6.4, 6.0], [3.0, 5.6, 9.6], [4.95, 5.3, 10.4]],
+    target: [[8.5, 5.6, 5.0], [9.0, 5.7, 7.0], [1.0, 6.4, 6.0], [3.0, 5.6, 9.6], [4.9, 5.2, 11.2]],
     title: ['Lounge', 'Under the roof', 1.0, 9.0] },
   { name: 'section', dur: 10, fov: 42, exp: [0.95, 0.95], clip: [12, 5.8],
     cam: [[25, 5.0, 4.6], [23, 5.6, 5.4], [21.5, 6.2, 6.6]],

@@ -282,11 +282,19 @@
       return c;
     }
 
+    // White lime plaster for every wall
+    const whitePlaster = (() => {
+      const S = 512, n = fbm(S, 10, 5, 131), m = fbm(S, 48, 3, 132);
+      const a = hex(0xf6f4ef), b = hex(0xe9e5dc), h = new Float32Array(S * S);
+      const col = paint(S, S, (x, y) => { const i = y * S + x; h[i] = n[i] * 0.6 + m[i] * 0.4; return mix(a, b, clamp01(n[i] * 0.8 + m[i] * 0.2)); });
+      return { map: tex(col, 2.0, true), normal: tex(normalFromHeight(h, S, 1.2), 2.0) };
+    })();
+
     // ---------- materials ----------
     const S = (o) => new THREE.MeshStandardMaterial(o);
     const P = (o) => new THREE.MeshPhysicalMaterial(o);
     const F = {
-      earth: S({ map: rammed.map, normalMap: rammed.normal, normalScale: new THREE.Vector2(0.7, 0.7), roughness: 0.93 }),
+      earth: S({ map: whitePlaster.map, normalMap: whitePlaster.normal, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.92 }),
       ceiling: S({ map: limewash, roughness: 0.95 }),
       travertine: S({ map: travertine.map, roughnessMap: travertine.rough, normalMap: travertine.normal, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 1 }),
       checker: P({ map: checker.map, normalMap: checker.normal, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.16, clearcoat: 0.4, clearcoatRoughness: 0.1 }),
@@ -298,7 +306,8 @@
       walnutDoor: S({ map: walnut, color: 0xb79a88, roughness: 0.42 }),
       reededWalnut: S({ map: walnut, normalMap: reeds.normal, normalScale: new THREE.Vector2(1.2, 1.2), roughness: 0.45 }),
       boards: S({ map: boards, roughness: 0.7 }),
-      roofSheet: S({ color: 0x34302d, metalness: 0.55, roughness: 0.5 }),
+      roofSheet: S({ color: 0x7a7b7a, metalness: 0.5, roughness: 0.48 }),
+      dormerClad: S({ color: 0x2e3135, metalness: 0.5, roughness: 0.45 }),
       charcoal: S({ color: 0x2a2826, metalness: 0.45, roughness: 0.45 }),
       brass: S({ color: 0xb38a4c, metalness: 1, roughness: 0.6, roughnessMap: brushed }),
       glass: P({ color: 0x9fb2ad, transparent: true, opacity: 0.1, roughness: 0.03, metalness: 0, depthWrite: false, side: THREE.DoubleSide, specularIntensity: 1 }),
@@ -319,7 +328,7 @@
     const M = model.mats;
     const swap = new Map([
       [M.plaster, F.earth], [M.concrete, F.sandstone], [M.column, F.sandstone], [M.stone, F.travertine],
-      [M.tile, F.quarry], [M.roof, F.roofSheet], [M.steel, F.charcoal], [M.brass, F.brass], [M.glass, F.glass],
+      [M.tile, F.quarry], [M.roof, F.roofSheet], [M.dormerClad, F.dormerClad], [M.steel, F.charcoal], [M.brass, F.brass], [M.glass, F.glass],
       [M.frame, F.charcoal], [M.door, F.walnutDoor], [M.wood, F.walnut], [M.sofaGF, F.velvetTerracotta],
       [M.sofaFF, F.velvetOchre], [M.counter, F.honed], [M.inox, F.inox], [M.leaf, F.leaf], [M.pot, F.clay],
       [M.grass, F.grass], [M.paving, F.pavers], [M.sanitary, F.sanitary]
@@ -333,7 +342,7 @@
       'Cashier desk': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Planter': F.clay,
       'Plinth': F.sandstone,
-      'Dormer roof': [F.roofSheet, F.roofSheet, F.roofSheet, F.boards, F.roofSheet, F.roofSheet],
+      'Dormer roof': [F.dormerClad, F.dormerClad, F.dormerClad, F.boards, F.dormerClad, F.dormerClad],
       'Dormer frame': [F.ceiling, F.ceiling, F.ceiling, F.ceiling, F.ceiling, F.ceiling]
     };
     model.root.traverse(o => {
@@ -427,8 +436,8 @@
     // Lounge: uplights along both knee walls, washing the timber-lined roof
     cove(groups.first, 0.2, 9.8, EAVE - 0.03, EAVE - 0.01, 0.2, 0.24, [5, EAVE, 0.35], [5, EAVE + 4, 2.4], 9.4, 0.25, 7);
     // Front knee wall is split by the dormer (grid C1 to B1)
-    cove(groups.first, 0.2, 2.75, EAVE - 0.03, EAVE - 0.01, 9.76, 9.8, [1.5, EAVE, 9.65], [1.5, EAVE + 4, 7.6], 2.5, 0.25, 7);
-    cove(groups.first, 7.15, 9.8, EAVE - 0.03, EAVE - 0.01, 9.76, 9.8, [8.5, EAVE, 9.65], [8.5, EAVE + 4, 7.6], 2.6, 0.25, 7);
+    cove(groups.first, 0.2, 2.4, EAVE - 0.03, EAVE - 0.01, 9.76, 9.8, [1.3, EAVE, 9.65], [1.3, EAVE + 4, 7.6], 2.2, 0.25, 7);
+    cove(groups.first, 7.4, 9.8, EAVE - 0.03, EAVE - 0.01, 9.76, 9.8, [8.6, EAVE, 9.65], [8.6, EAVE + 4, 7.6], 2.4, 0.25, 7);
     // Corridor downlights and kitchen task lighting
     [[1.8, 1.4], [1.8, 3.6]].forEach(([x, z]) => {
       const d = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.01, 24), F.bulb);
@@ -440,26 +449,8 @@
       const l = new THREE.PointLight(0xffe2c0, 4, 6, 2); l.position.set(x, CEIL - 0.2, z); groups.ground.add(l); lights.push(l);
     });
 
-    // Backlit silhouette murals: restaurant west wall and the lounge gable
-    const muralRest = new THREE.CanvasTexture(mural(512, 820, 5)); muralRest.colorSpace = THREE.SRGBColorSpace;
-    const muralGable = new THREE.CanvasTexture(mural(1400, 910, 3)); muralGable.colorSpace = THREE.SRGBColorSpace;
-    const muralMat = t => S({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.8 });
-    const pr = new THREE.Mesh(new THREE.PlaneGeometry(2.0, GF + 3.1 - (GF + 0.15)), muralMat(muralRest));
-    pr.rotation.y = Math.PI / 2; pr.position.set(0.205, GF + 0.15 + (3.1 - 0.15) / 2, 8.72);
-    pr.userData.keepUV = true; pr.receiveShadow = true; pr.name = 'Silhouette panel'; groups.ground.add(pr);
-    cove(groups.ground, 0.21, 0.26, GF + 0.04, GF + 0.07, 7.72, 9.72, [0.32, GF + 0.08, 8.72], [0.0, GF + 2.5, 8.72], 2.0, 0.15, 10);
-
-    const shape = new THREE.Shape();
-    const gpts = [[0.2, FF + 0.02], [9.8, FF + 0.02], [9.8, roofUnder(9.8) - 0.05], [5, RIDGE - 0.12], [0.2, roofUnder(0.2) - 0.05]];
-    gpts.forEach(([z, y], i) => (i ? shape.lineTo(-z, y) : shape.moveTo(-z, y)));
-    const gg = new THREE.ShapeGeometry(shape);
-    const gp = gg.attributes.position, guv = gg.attributes.uv;
-    for (let i = 0; i < gp.count; i++) guv.setXY(i, 1 - (-gp.getX(i)) / 10, (gp.getY(i) - FF) / (RIDGE - FF));
-    gg.rotateY(Math.PI / 2);
-    const gm = new THREE.Mesh(gg, muralMat(muralGable));
-    gm.material.side = THREE.DoubleSide; gm.position.x = 0.205; gm.userData.keepUV = true; gm.receiveShadow = true;
-    gm.name = 'Silhouette panel'; groups.first.add(gm);
-    cove(groups.first, 0.21, 0.26, FF + 0.03, FF + 0.06, 0.3, 9.7, [0.35, FF + 0.08, 5], [0.0, FF + 4, 5], 9.4, 0.2, 6);
+    // (Silhouette murals removed: walls are kept plain white)
+    void mural;
 
     // ---------- world-space UVs so every texture keeps real-world scale ----------
     model.root.updateMatrixWorld(true);
