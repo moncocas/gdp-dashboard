@@ -42,6 +42,8 @@ A glazed box dormer sits on the front roof slope. It's 5.0 m wide (2,400 | 5,000
 - **Ground floor:** black and white marble laid diagonally throughout, including the restaurant, kitchen, walkway, W.C.s and verandah.
 - **Lounge:** a hand‑painted‑style botanical mural (big leaves over arches) on the back knee wall, lit by the LED cove above it.
 - **Basin lobby under the stair:** a red marble vanity with a reeded walnut base and brass taps, a round mirror with a brass bead frame, fluted‑glass sconces and leaf wallpaper.
+- **Lounge seating:** a long candy‑stripe banquette along the mural wall, with rattan ends and floral cushions. In front of it are eight round white‑marble bistro tables on turned dark‑wood pedestals with brass feet, and orange velvet chairs with floral backs.
+- **Skylight:** removed. The back roof slope is one continuous sheet.
 - **Ground‑floor lights:** seven colourful woven disc pendants with brass centres over the restaurant.
 
 ## Other revisions

@@ -145,6 +145,43 @@
       return { map: tex(col, 1.6, true), normal: tex(normalFromHeight(h, S, 1.0), 1.6) };
     })();
 
+    // Candy-stripe upholstery: cream with paired rust pinstripes
+    const stripes = (() => {
+      const S = 256, n = fbm(S, 32, 3, 151), cream = hex(0xeee4d4), rust = hex(0xa8472c);
+      return tex(paint(S, S, (x, y) => {
+        const k = x % 32, on = (k >= 4 && k < 7) || (k >= 10 && k < 12);
+        return (on ? rust : cream).map(c => c * (0.95 + 0.07 * n[y * S + x]));
+      }), 0.22, true);
+    })();
+    // Small floral print (chair backs, cushions)
+    const floral = (() => {
+      const S = 512, cv = document.createElement('canvas'); cv.width = cv.height = S;
+      const ctx = cv.getContext('2d'), r = rng(161);
+      ctx.fillStyle = '#efe7d6'; ctx.fillRect(0, 0, S, S);
+      const leafC = ['#7f9a5e', '#5f7a48', '#a9b98a'], flowC = ['#d98c8c', '#c2603f', '#e7b7a4', '#b04a5a'];
+      for (let k = 0; k < 160; k++) {
+        const x = r() * S, y = r() * S, a = r() * Math.PI * 2, L = 10 + r() * 18;
+        ctx.save(); ctx.translate(x, y); ctx.rotate(a); ctx.fillStyle = leafC[k % 3];
+        ctx.beginPath(); ctx.ellipse(L / 2, 0, L / 2, L / 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+      for (let k = 0; k < 55; k++) {
+        const x = r() * S, y = r() * S, R0 = 6 + r() * 9, c = flowC[k % 4];
+        ctx.fillStyle = c;
+        for (let pt = 0; pt < 6; pt++) { const a = pt / 6 * Math.PI * 2; ctx.beginPath(); ctx.arc(x + Math.cos(a) * R0 * 0.6, y + Math.sin(a) * R0 * 0.6, R0 * 0.45, 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillStyle = '#e9c46a'; ctx.beginPath(); ctx.arc(x, y, R0 * 0.3, 0, Math.PI * 2); ctx.fill();
+      }
+      return tex(cv, 0.35, true);
+    })();
+    // White marble (bistro table tops)
+    const whiteMarble = (() => {
+      const S = 512, n = fbm(S, 3, 6, 171), w = fbm(S, 5, 4, 172);
+      const a = hex(0xf4f2ed), vein = hex(0xb9b4ab);
+      return tex(paint(S, S, (x, y) => {
+        const i = y * S + x, v = Math.abs(Math.sin(x * 0.01 + y * 0.015 + n[i] * 10 + w[i] * 4));
+        return mix(a, vein, (v < 0.04 ? 1 - v / 0.04 : 0) * 0.6);
+      }), 0.7, true);
+    })();
+
     // Polished red marble (vanity top)
     const redMarble = (() => {
       const S = 512, n = fbm(S, 3, 6, 141), w = fbm(S, 5, 4, 142);
@@ -381,6 +418,12 @@
       travertine: S({ map: travertine.map, roughnessMap: travertine.rough, normalMap: travertine.normal, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 1 }),
       checker: P({ map: checker.map, normalMap: checker.normal, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 0.14, clearcoat: 0.5, clearcoatRoughness: 0.08 }),
       quarry: S({ map: quarry, roughness: 0.62 }),
+      stripe: S({ map: stripes, roughness: 0.85 }),
+      floral: S({ map: floral, roughness: 0.8 }),
+      velvetOrange: P({ color: 0xb4441f, roughness: 0.8, sheen: 1, sheenColor: new THREE.Color(0xe08a5c), sheenRoughness: 0.45 }),
+      marbleWhite: P({ map: whiteMarble, roughness: 0.1, clearcoat: 0.6, clearcoatRoughness: 0.06 }),
+      darkWood: S({ map: walnut, color: 0x7a6a62, roughness: 0.4 }),
+      rattan: S({ color: 0xb37b46, normalMap: reeds.normal, normalScale: new THREE.Vector2(1.4, 1.4), roughness: 0.6 }),
       redMarble: P({ map: redMarble, roughness: 0.12, clearcoat: 0.5, clearcoatRoughness: 0.08 }),
       basinMarble: P({ map: redMarble, color: 0xcfa59a, roughness: 0.2 }),
       mirror: S({ color: 0xd8d8d8, metalness: 1, roughness: 0.04 }),
@@ -413,7 +456,8 @@
     const M = model.mats;
     const swap = new Map([
       [M.plaster, F.earth], [M.concrete, F.sandstone], [M.column, F.sandstone], [M.stone, F.travertine],
-      [M.tile, F.quarry], [M.roof, F.roofSheet], [M.dormerClad, F.dormerClad], [M.steel, F.charcoal], [M.brass, F.brass], [M.glass, F.glass],
+      [M.tile, F.quarry], [M.roof, F.roofSheet], [M.dormerClad, F.dormerClad],
+      [M.stripe, F.stripe], [M.floral, F.floral], [M.velvetOrange, F.velvetOrange], [M.marbleWhite, F.marbleWhite], [M.darkWood, F.darkWood], [M.rattan, F.rattan], [M.steel, F.charcoal], [M.brass, F.brass], [M.glass, F.glass],
       [M.frame, F.charcoal], [M.door, F.walnutDoor], [M.wood, F.walnut], [M.sofaGF, F.velvetTerracotta],
       [M.sofaFF, F.velvetOchre], [M.counter, F.honed], [M.inox, F.inox], [M.leaf, F.leaf], [M.pot, F.clay],
       [M.grass, F.grass], [M.paving, F.pavers], [M.sanitary, F.sanitary]

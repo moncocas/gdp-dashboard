@@ -32,6 +32,12 @@
       roof: std(0x7d7e7c, { metalness: 0.45, roughness: 0.5, side: THREE.DoubleSide }),
       steel: std(0x50575e, { metalness: 0.6, roughness: 0.4 }),
       brass: std(0xb08d57, { metalness: 0.9, roughness: 0.35 }),
+      stripe: std(0xeadfd0),
+      velvetOrange: std(0xb4461f),
+      floral: std(0xeee5d2),
+      marbleWhite: std(0xf2f0eb, { roughness: 0.2 }),
+      darkWood: std(0x3a2416, { roughness: 0.5 }),
+      rattan: std(0xb07a45),
       glass: std(0x9cc7d6, { transparent: true, opacity: 0.3, roughness: 0.05, metalness: 0.1, depthWrite: false, side: THREE.DoubleSide }),
       frame: std(0x2e3337, { metalness: 0.4, roughness: 0.5 }),
       door: std(0x7a4a28),
@@ -376,6 +382,50 @@
     booth(first, 8.8, 9.15, FF, mats.sofaFF);
     [[4.45, 0.6], [4.45, 1.3], [1.6, 0.5]].forEach(([x, z]) => plant(first, x, z, FF, 0.9));
     }
+    // Lounge: long striped banquette along the mural (north) wall, marble bistro tables and
+    // velvet chairs facing it (after the reference photo). Stair landing at the west end kept clear.
+    const BX0 = 1.6, BX1 = 9.55, BZ = 0.2, BD = 0.62;
+    box(first, mats.stripe, BX0 + 0.12, BX1 - 0.12, FF, FF + 0.44, BZ, BZ + BD, 'Banquette seat');
+    for (let x = BX0 + 0.12; x < BX1 - 0.13; x += 0.9) {
+      const x1 = Math.min(x + 0.88, BX1 - 0.12);
+      box(first, mats.stripe, x, x1, FF + 0.44, FF + 1.02, BZ, BZ + 0.16, 'Banquette back');
+    }
+    box(first, mats.rattan, BX0, BX0 + 0.12, FF, FF + 0.72, BZ, BZ + BD, 'Rattan end');
+    box(first, mats.rattan, BX1 - 0.12, BX1, FF, FF + 0.72, BZ, BZ + BD, 'Rattan end');
+    box(first, mats.darkWood, BX0 + 0.12, BX1 - 0.12, FF, FF + 0.08, BZ + BD - 0.02, BZ + BD, 'Banquette plinth');
+    const TZ = 1.22;
+    for (let k = 0; k < 8; k++) {
+      const x = 2.2 + k * 0.98;
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.035, 40), mats.marbleWhite);
+      top.position.set(x, FF + 0.74, TZ); top.name = 'Table top'; first.add(shadowy(top));
+      const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.315, 0.315, 0.012, 40), mats.darkWood);
+      rim.position.set(x, FF + 0.716, TZ); first.add(shadowy(rim));
+      for (let b = 0; b < 9; b++) {                       // turned / twisted pedestal
+        const bead = new THREE.Mesh(new THREE.SphereGeometry(0.048, 14, 10), mats.darkWood);
+        bead.position.set(x, FF + 0.1 + b * 0.068, TZ); bead.scale.set(1, 0.85, 1); bead.name = 'Table leg';
+        first.add(shadowy(bead));
+      }
+      const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.05, 32), mats.brass);
+      foot.position.set(x, FF + 0.025, TZ); foot.name = 'Table base'; first.add(shadowy(foot));
+      // bistro chair facing the banquette
+      const cz = TZ + 0.62;
+      box(first, mats.velvetOrange, x - 0.21, x + 0.21, FF + 0.42, FF + 0.5, cz - 0.21, cz + 0.21, 'Chair seat');
+      [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]].forEach(([dx, dz]) =>
+        box(first, mats.darkWood, x + dx - 0.015, x + dx + 0.015, FF, FF + 0.42, cz + dz - 0.015, cz + dz + 0.015, 'Chair frame'));
+      [-0.18, 0.18].forEach(dx => box(first, mats.darkWood, x + dx - 0.015, x + dx + 0.015, FF + 0.42, FF + 0.95, cz + 0.19, cz + 0.22, 'Chair frame'));
+      const bs = new THREE.Shape();
+      bs.moveTo(-0.18, 0); bs.lineTo(0.18, 0); bs.lineTo(0.18, 0.22); bs.absarc(0, 0.22, 0.18, 0, Math.PI, false); bs.closePath();
+      const back = new THREE.Mesh(new THREE.ExtrudeGeometry(bs, { depth: 0.04, bevelEnabled: false }), mats.floral);
+      back.position.set(x, FF + 0.55, cz + 0.17); back.rotation.x = -0.08; back.name = 'Chair back';
+      first.add(shadowy(back));
+    }
+    // Floral scatter cushions on the banquette
+    [2.0, 2.35, 4.6, 6.95, 7.3, 9.1].forEach((x, k) => {
+      const c = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 14), mats.floral);
+      c.scale.set(1, 0.95, 0.35); c.position.set(x, FF + 0.66, BZ + 0.24); c.rotation.z = (k % 2 ? 0.25 : -0.2);
+      c.name = 'Cushion'; first.add(shadowy(c));
+    });
+
     // Planter boxes on the 500 mm cantilever
     box(first, mats.concrete, 10.02, 10.48, FF, FF + 0.45, 0.1, 9.9, 'Planter');
     for (let z = 0.5; z < 9.8; z += 0.65) {
@@ -400,30 +450,15 @@
       g.add(shadowy(m, mat !== mats.glass));
       return m;
     }
-    // Skylight opening on the back slope, between grids D and B
-    const SK = { x0: 3.6, x1: 6.4, d0: 1.8, d1: 3.0 };
-    panel(roof, mats.roof, 'N', RX0, SK.x0, 0, D_N, 0, T, 'Roof sheeting');
-    panel(roof, mats.roof, 'N', SK.x1, RX1, 0, D_N, 0, T, 'Roof sheeting');
-    panel(roof, mats.roof, 'N', SK.x0, SK.x1, 0, SK.d0, 0, T, 'Roof sheeting');
-    panel(roof, mats.roof, 'N', SK.x0, SK.x1, SK.d1, D_N, 0, T, 'Roof sheeting');
+    // Back slope: one continuous sheet (skylight removed)
+    panel(roof, mats.roof, 'N', RX0, RX1, 0, D_N, 0, T, 'Roof sheeting');
     const DD = DZB - RIDGE_Z;                            // slope distance cut back for the dormer
     panel(roof, mats.roof, 'S', RX0, DX0, 0, D_S, 0, T, 'Roof sheeting');
     panel(roof, mats.roof, 'S', DX1, RX1, 0, D_S, 0, T, 'Roof sheeting');
     panel(roof, mats.roof, 'S', DX0, DX1, 0, DD, 0, T, 'Roof sheeting');
-    panel(roof, mats.glass, 'N', SK.x0, SK.x1, SK.d0, SK.d1, 0.02, 0.02, 'Skylight glazing');
-    panel(roof, mats.frame, 'N', SK.x0 - 0.06, SK.x0, SK.d0, SK.d1, 0.02, 0.1, 'Skylight frame');
-    panel(roof, mats.frame, 'N', SK.x1, SK.x1 + 0.06, SK.d0, SK.d1, 0.02, 0.1, 'Skylight frame');
-    panel(roof, mats.frame, 'N', SK.x0 - 0.06, SK.x1 + 0.06, SK.d0 - 0.06, SK.d0, 0.02, 0.1, 'Skylight frame');
-    panel(roof, mats.frame, 'N', SK.x0 - 0.06, SK.x1 + 0.06, SK.d1, SK.d1 + 0.06, 0.02, 0.1, 'Skylight frame');
     // Box-profile ribs at 300 mm centres
     for (let x = RX0 + 0.15; x < RX1; x += 0.3) {
-      const inSky = x > SK.x0 && x < SK.x1;
-      if (inSky) {
-        panel(roof, mats.roof, 'N', x - 0.02, x + 0.02, 0, SK.d0, T, 0.04);
-        panel(roof, mats.roof, 'N', x - 0.02, x + 0.02, SK.d1, D_N, T, 0.04);
-      } else {
-        panel(roof, mats.roof, 'N', x - 0.02, x + 0.02, 0, D_N, T, 0.04);
-      }
+      panel(roof, mats.roof, 'N', x - 0.02, x + 0.02, 0, D_N, T, 0.04);
       panel(roof, mats.roof, 'S', x - 0.02, x + 0.02, 0, x > DX0 && x < DX1 ? DD : D_S, T, 0.04);
     }
 
