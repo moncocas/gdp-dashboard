@@ -110,12 +110,14 @@ const N = Math.round(TOTAL * FPS);
   await page.addStyleTag({ content: '.card,.caption,.loading{display:none!important}' });
   await page.waitForFunction(() => window.__render, null, { timeout: 180000 });
   await page.evaluate(h => window.__render.setHigh(h), !FAST);
+  // Warm-up render: compiles every shader before timing starts
+  await page.evaluate(st => { const r = window.__render; r.shot(st.shot); r.renderNow(); }, frameState(0));
   const t0 = Date.now();
   for (let k = 0; k < todo.length; k++) {
     const i = todo[k], st = frameState(i / FPS);
     await page.evaluate(st => { const r = window.__render; r.shot(st.shot); r.film(...st.film); r.renderNow(); }, st);
     const file = path.join(OUT, `f${String(i).padStart(5, '0')}.jpg`);
-    await page.screenshot({ path: file + '.tmp', type: 'jpeg', quality: 93 });
+    await page.screenshot({ path: file + '.tmp', type: 'jpeg', quality: 93, timeout: 300000 });
     fs.renameSync(file + '.tmp', file);
     if (k % 20 === 0) {
       const per = (Date.now() - t0) / (k + 1) / 1000;
