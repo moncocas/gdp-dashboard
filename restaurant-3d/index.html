@@ -116,10 +116,9 @@
       <dt>Walls</dt><dd>Rammed earth</dd>
       <dt>Dining floors</dt><dd>Travertine 600²</dd>
       <dt>Walkway, W.C.</dt><dd>Checker 300²</dd>
-      <dt>Booths</dt><dd>Fluted velvet</dd>
       <dt>Counters</dt><dd>Reeded walnut</dd>
-      <dt>Ceilings</dt><dd>Rattan, timber</dd>
-      <dt>Metalwork</dt><dd>Brushed brass</dd>
+      <dt>Roof lining</dt><dd>Timber boards</dd>
+      <dt>Railings</dt><dd>Brushed brass</dd>
     </dl>
   </details>
   <div class="meta"><span id="status">Drag to look around</span><button class="quality" id="quality" type="button">Quality: High</button></div>
@@ -222,8 +221,8 @@ function buildComposer(w, h) {
 }
 
 const views = {
-  'v-rest':   { cam: [9.35, 1.72, 5.55], target: [2.0, 1.35, 8.9], fov: 58, exp: 0.95, caption: 'Restaurant, ground floor', note: 'Looking south-west to the booths and silhouette panel' },
-  'v-lounge': { cam: [9.55, 5.3, 7.75], target: [1.0, 5.9, 4.0], fov: 60, exp: 0.82, caption: 'Lounge under the roof', note: 'Looking west to the backlit gable' },
+  'v-rest':   { cam: [9.35, 1.72, 5.55], target: [2.0, 1.35, 8.9], fov: 58, exp: 0.95, caption: 'Restaurant, ground floor', note: 'Looking south-west to the stair and silhouette panel' },
+  'v-lounge': { cam: [9.55, 5.3, 7.75], target: [1.0, 5.9, 4.0], fov: 60, exp: 1.0, caption: 'Lounge under the roof', note: 'Looking west to the backlit gable' },
   'v-walk':   { cam: [1.8, 1.62, 4.75], target: [1.8, 0.95, 0.2], fov: 64, exp: 1.4, caption: 'Back-of-house walkway', note: 'W.C. doors left, kitchen right' },
   'v-dormer': { cam: [5.0, 4.4, 22.0], target: [4.95, 5.4, 9.0], fov: 38, exp: 0.75, caption: 'The new roof dormer', note: 'Glazed box dormer, grids C1 to B1' },
   'v-ext':    { cam: [20.5, 2.0, 23.5], target: [4.6, 4.3, 5.2], fov: 40, exp: 0.75, caption: 'Golden hour from the street', note: 'Shopfront, verandah and the glazed east gable' },

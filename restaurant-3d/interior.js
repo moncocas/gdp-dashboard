@@ -376,11 +376,15 @@
       l.position.set(x, bottom + 0.08 * scale, z); g.add(l); lights.push(l);
     }
     // Ground floor dining: over each booth and round table
+    // Pendants and rattan clouds belong to the furniture layout; only added when furnished
+    const furnished = !!opts.furnished;
+    if (furnished) {
     [[3.0, 9.15], [5.8, 9.15], [8.5, 9.15], [1.1, 8.9], [6.4, 6.8]].forEach(([x, z]) => pendant(groups.ground, x, z, GF + 1.55, CEIL));
     // Lounge
     [[3.0, 3.1], [5.6, 3.1], [8.2, 3.1], [1.6, 9.15], [4.0, 9.15], [6.4, 9.15], [8.8, 9.15],
      [2.8, 6.4], [4.8, 6.4], [7.0, 6.4], [8.9, 6.4], [3.05, 1.6], [5.85, 1.6]]
       .forEach(([x, z]) => pendant(groups.first, x, z, FF + 1.6, Math.min(roofUnder(z), FF + 3.4), 1.15));
+    }
 
     // Sculptural rattan ceiling clouds with a warm glow inside
     function cloud(g, x, y, z, r, seed) {
@@ -400,10 +404,12 @@
       core.position.set(x, y + 0.03, z); g.add(core);
       const l = new THREE.PointLight(0xffb66e, 4, 6, 2); l.position.set(x, y - 0.12, z); g.add(l); lights.push(l);
     }
+    if (furnished) {
     cloud(groups.ground, 4.1, CEIL - 0.28, 7.3, 1.35, 7);
     cloud(groups.ground, 7.8, CEIL - 0.28, 7.6, 1.15, 9);
     cloud(groups.first, 3.0, FF + 3.0, 6.3, 1.25, 13);
     cloud(groups.first, 7.3, FF + 3.0, 6.3, 1.35, 17);
+    }
 
     // LED coves and their washes
     if (opts.RectAreaLightUniformsLib) opts.RectAreaLightUniformsLib.init();

@@ -10,7 +10,9 @@
  * Works in the browser (window.buildRestaurant) and in Node (globalThis.buildRestaurant).
  */
 (function (root) {
-  function buildRestaurant(THREE) {
+  // opts.furnished: true adds the dining furniture and plants (left out by default: empty shell)
+  function buildRestaurant(THREE, opts) {
+    const furnished = !!(opts && opts.furnished);
     // Levels, from Section X-X
     const GF = 0.3;            // ground floor finish above ground level
     const CEIL = 3.75;         // underside of first floor slab (GF + 3,450)
@@ -279,12 +281,14 @@
     box(ground, mats.sanitary, 0.5, 0.9, GF, GF + 0.42, 1.65, 2.25, 'W.C');
     box(ground, mats.sanitary, 0.25, 0.55, GF + 0.75, GF + 0.9, 3.4, 3.9, 'Wash hand basin');
     // Restaurant
+    if (furnished) {
     booth(ground, 3.0, 9.15, GF, mats.sofaGF);
     booth(ground, 5.8, 9.15, GF, mats.sofaGF);
     booth(ground, 8.5, 9.15, GF, mats.sofaGF);
     roundTable(ground, 1.1, 8.9, GF, 4, mats.sofaGF);
     roundTable(ground, 6.4, 6.8, GF, 4, mats.sofaGF);
     [[1.9, 8.7], [1.9, 9.5], [4.4, 8.7], [7.2, 8.7], [5.3, 6.8], [7.5, 6.8]].forEach(([x, z]) => plant(ground, x, z, GF, 0.8));
+    }
 
     // ---------- First floor ----------
     // 150 mm slab, cantilevered 500 mm past grid A, with the stair void
@@ -354,6 +358,7 @@
     box(first, mats.column, 0.1, 9.9, BEAM_Y, BEAM_Y + 0.2, RIDGE_Z - 0.1, RIDGE_Z + 0.1, 'R.C beam');
 
     // Lounge furniture
+    if (furnished) {
     sectional(first, 1.9, 4.2, 0.25, FF, 'left');
     sectional(first, 4.7, 7.0, 0.25, FF, 'right');
     booth(first, 3.0, 3.1, FF, mats.sofaFF);
@@ -368,6 +373,7 @@
     booth(first, 6.4, 9.15, FF, mats.sofaFF);
     booth(first, 8.8, 9.15, FF, mats.sofaFF);
     [[4.45, 0.6], [4.45, 1.3], [1.6, 0.5]].forEach(([x, z]) => plant(first, x, z, FF, 0.9));
+    }
     // Planter boxes on the 500 mm cantilever
     box(first, mats.concrete, 10.02, 10.48, FF, FF + 0.45, 0.1, 9.9, 'Planter');
     for (let z = 0.5; z < 9.8; z += 0.65) {

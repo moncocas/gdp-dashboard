@@ -19,7 +19,7 @@ This is a 3D model of the **Proposed Restaurant Development** for client Sadik A
 - **Roof overhangs:** the roof extends about 1.0 m past grid 1 and 1.6 m past grid 5, so it covers the verandah. It overhangs the gable ends by 300–400 mm.
 - **East gable (grid A):** it's modelled fully glazed, behind the 500 mm planter cantilever. The west gable is 200 mm masonry.
 - **Windows and doors:** sizes are typical estimates, because the window and door schedule isn't on this sheet.
-- **Furniture:** it follows the plan layout using simple shapes.
+- **Furniture:** none. Both floors are an empty shell, with no booths, tables, chairs, sofas, plants, pendant lamps or rattan ceiling clouds. The code is still there: pass `{ furnished: true }` to `buildRestaurant()` and `applyEarthArtisanship()` to bring it back. Kitchen equipment, W.C. fittings, the service counter and the cashier desk stay.
 
 ## Earth & Artisanship scheme
 
@@ -27,9 +27,8 @@ The scheme in `interior.js` replaces every material with a textured one and adds
 
 - **Walls:** rammed earth in terracotta and ochre strata.
 - **Floors:** 600 mm polished travertine in the dining areas, and 300 mm black and off‑white checkered tiles in the back‑of‑house walkway and W.C.s.
-- **Seating:** fluted velvet, terracotta on the ground floor and ochre in the lounge.
 - **Joinery:** reeded walnut on the service counter and cashier desk, and brushed brass on the railings and table bases.
-- **Ceilings:** timber boarding under the roof, rattan ceiling clouds and woven rattan pendants over every table.
+- **Ceilings:** timber boarding under the roof.
 - **Lighting:** low late‑afternoon sun through the shopfront and the east gable, warm LED coves, and backlit tree‑silhouette panels on the restaurant's west wall and the lounge gable.
 - **Rendering:** filmic (ACES) tone mapping, ground‑truth ambient occlusion (GTAO) and bloom.
 
