@@ -127,20 +127,102 @@
       };
     })();
 
-    // Monochrome checkered tiles, 300 mm squares, polished
+    // Black and white marble laid diagonally, ~280 mm squares, polished (texture covers 1.6 m)
     const checker = (() => {
-      const S = 512, cell = 128, n = fbm(S, 8, 4, 41);
-      const blk = hex(0x151413), wht = hex(0xece5d6), grout = hex(0x8c8478);
+      const S = 512, c = 128, n = fbm(S, 4, 5, 41), w = fbm(S, 6, 4, 42);
+      const blk = hex(0x121212), wht = hex(0xeeebe4), grout = hex(0x7d776d);
       const h = new Float32Array(S * S);
       const col = paint(S, S, (x, y) => {
-        const i = y * S + x, gx = x % cell, gy = y % cell;
-        if (gx < 1 || gy < 1) { h[i] = -1; return grout; }
-        const dark = ((x / cell | 0) + (y / cell | 0)) % 2 === 0;
-        const m = 0.94 + 0.08 * n[i];
-        return (dark ? blk : wht).map(c => Math.min(255, c * m));
+        const i = y * S + x, u = x + y, v = x - y + S * 4;
+        if (u % c < 1.5 || v % c < 1.5) { h[i] = -1; return grout; }
+        const dark = ((Math.floor(u / c) + Math.floor(v / c)) & 1) === 0;
+        const vein = Math.abs(Math.sin((x * 0.018 + y * 0.011) + n[i] * 9 + w[i] * 4));
+        const line = vein < 0.035 ? 1 - vein / 0.035 : 0;
+        const base = dark ? blk : wht;
+        const vc = dark ? hex(0x6a6862) : hex(0x9a958b);
+        return mix(base, vc, line * 0.75).map(ch => Math.min(255, ch * (0.96 + 0.06 * n[i])));
       });
-      return { map: tex(col, 1.2, true), normal: tex(normalFromHeight(h, S, 1.2), 1.2) };
+      return { map: tex(col, 1.6, true), normal: tex(normalFromHeight(h, S, 1.0), 1.6) };
     })();
+
+    // Polished red marble (vanity top)
+    const redMarble = (() => {
+      const S = 512, n = fbm(S, 3, 6, 141), w = fbm(S, 5, 4, 142);
+      const a = hex(0x6e221c), b = hex(0x9a3a2e), vein = hex(0xe8c9bd);
+      return tex(paint(S, S, (x, y) => {
+        const i = y * S + x, v = Math.abs(Math.sin(x * 0.012 - y * 0.02 + n[i] * 11 + w[i] * 5));
+        const line = v < 0.05 ? 1 - v / 0.05 : 0;
+        return mix(mix(a, b, w[i]), vein, line * 0.8);
+      }), 0.9, true);
+    })();
+
+    // Hand-painted botanical mural: giant leaves over arches on a plaster ground
+    function botanical(W, H, seed, pal) {
+      const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const ctx = cv.getContext('2d'), r = rng(seed);
+      ctx.fillStyle = pal.ground; ctx.fillRect(0, 0, W, H);
+      // plaster mottling
+      for (let k = 0; k < 900; k++) {
+        ctx.fillStyle = `rgba(${pal.mottle},${0.03 + r() * 0.05})`;
+        ctx.beginPath(); ctx.arc(r() * W, r() * H, 10 + r() * 60, 0, Math.PI * 2); ctx.fill();
+      }
+      // arches and colour blocks
+      const unit = H;
+      for (let k = 0; k < W / unit * 1.6; k++) {
+        const aw = unit * (0.25 + r() * 0.35), ax = r() * W, top = H * (0.15 + r() * 0.45);
+        ctx.fillStyle = pal.blocks[Math.floor(r() * pal.blocks.length)];
+        ctx.beginPath(); ctx.moveTo(ax - aw / 2, H); ctx.lineTo(ax - aw / 2, top + aw / 2);
+        ctx.arc(ax, top + aw / 2, aw / 2, Math.PI, 0); ctx.lineTo(ax + aw / 2, H); ctx.closePath(); ctx.fill();
+      }
+      function leaf(x, y, ang, L, Wd, col, vein, kind) {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+        const p = new Path2D();
+        if (kind === 'banana') {
+          p.moveTo(0, 0);
+          p.bezierCurveTo(L * 0.25, -Wd, L * 0.75, -Wd * 0.9, L, 0);
+          p.bezierCurveTo(L * 0.75, Wd * 0.9, L * 0.25, Wd, 0, 0);
+        } else {
+          p.moveTo(0, 0);
+          p.bezierCurveTo(L * 0.1, -Wd * 1.3, L * 0.9, -Wd * 1.2, L, 0);
+          p.bezierCurveTo(L * 0.9, Wd * 1.2, L * 0.1, Wd * 1.3, L * 0.05, Wd * 0.15);
+          p.closePath();
+        }
+        ctx.fillStyle = col; ctx.fill(p);
+        // painted two-tone: lighter upper half
+        ctx.save(); ctx.clip(p); ctx.fillStyle = 'rgba(255,240,220,0.13)'; ctx.fillRect(0, -Wd * 1.4, L, Wd * 1.4); ctx.restore();
+        ctx.strokeStyle = vein; ctx.lineCap = 'round';
+        ctx.lineWidth = Math.max(2, Wd * 0.06); ctx.beginPath(); ctx.moveTo(-L * 0.12, 0); ctx.lineTo(L * 0.97, 0); ctx.stroke();
+        ctx.lineWidth = Math.max(1, Wd * 0.025);
+        const nv = kind === 'banana' ? 22 : 8;
+        for (let k = 1; k < nv; k++) {
+          const t = k / nv, sx = L * t, prof = Math.sin(Math.PI * Math.min(1, t * 1.05));
+          [-1, 1].forEach(sg => {
+            ctx.beginPath(); ctx.moveTo(sx, 0);
+            ctx.quadraticCurveTo(sx + Wd * 0.3, sg * Wd * 0.5 * prof, sx + Wd * 0.55, sg * Wd * 0.95 * prof); ctx.stroke();
+          });
+        }
+        if (kind === 'monstera') {
+          ctx.strokeStyle = pal.ground; ctx.lineWidth = Math.max(2, Wd * 0.07);
+          for (let k = 2; k < 8; k++) {
+            const sx = L * k / 9, prof = Math.sin(Math.PI * k / 9);
+            [-1, 1].forEach(sg => { ctx.beginPath(); ctx.moveTo(sx + Wd * 0.25, sg * Wd * 0.45 * prof); ctx.lineTo(sx + Wd * 0.6, sg * Wd * 1.15 * prof); ctx.stroke(); });
+          }
+        }
+        ctx.restore();
+      }
+      const count = Math.round(W / unit * pal.density);
+      for (let k = 0; k < count; k++) {
+        const kind = r() < pal.monstera ? 'monstera' : 'banana';
+        const L = unit * (kind === 'banana' ? 0.55 + r() * 0.5 : 0.35 + r() * 0.3);
+        const x = r() * W, y = H * (0.55 + r() * 0.6);
+        const ang = -Math.PI / 2 + (r() - 0.5) * 1.6;
+        const col = pal.leaves[Math.floor(r() * pal.leaves.length)];
+        ctx.strokeStyle = pal.stem; ctx.lineWidth = unit * 0.012;
+        ctx.beginPath(); ctx.moveTo(x, H + 10); ctx.quadraticCurveTo(x + (r() - 0.5) * 60, y + (H - y) / 2, x, y); ctx.stroke();
+        leaf(x, y, ang, L, L * (kind === 'banana' ? 0.2 : 0.42), col, pal.vein, kind);
+      }
+      return cv;
+    }
 
     // Fluted ribs (velvet booth upholstery and reeded walnut)
     function flutes(count, metres, depth) {
@@ -297,8 +379,11 @@
       earth: S({ map: whitePlaster.map, normalMap: whitePlaster.normal, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.92 }),
       ceiling: S({ map: limewash, roughness: 0.95 }),
       travertine: S({ map: travertine.map, roughnessMap: travertine.rough, normalMap: travertine.normal, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 1 }),
-      checker: P({ map: checker.map, normalMap: checker.normal, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.16, clearcoat: 0.4, clearcoatRoughness: 0.1 }),
+      checker: P({ map: checker.map, normalMap: checker.normal, normalScale: new THREE.Vector2(0.4, 0.4), roughness: 0.14, clearcoat: 0.5, clearcoatRoughness: 0.08 }),
       quarry: S({ map: quarry, roughness: 0.62 }),
+      redMarble: P({ map: redMarble, roughness: 0.12, clearcoat: 0.5, clearcoatRoughness: 0.08 }),
+      basinMarble: P({ map: redMarble, color: 0xcfa59a, roughness: 0.2 }),
+      mirror: S({ color: 0xd8d8d8, metalness: 1, roughness: 0.04 }),
       sandstone: S({ map: sandstone.map, normalMap: sandstone.normal, normalScale: new THREE.Vector2(0.8, 0.8), roughness: 0.88 }),
       velvetTerracotta: P({ color: 0x8c3a22, map: velvetRibs.map, normalMap: velvetRibs.normal, roughness: 0.82, sheen: 1, sheenColor: new THREE.Color(0xc96a4c), sheenRoughness: 0.5 }),
       velvetOchre: P({ color: 0xa8741c, map: velvetRibs.map, normalMap: velvetRibs.normal, roughness: 0.82, sheen: 1, sheenColor: new THREE.Color(0xd9a650), sheenRoughness: 0.5 }),
@@ -341,6 +426,13 @@
       'Service counter': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Cashier desk': [F.reededWalnut, F.reededWalnut, F.honed, F.reededWalnut, F.reededWalnut, F.reededWalnut],
       'Planter': F.clay,
+      'Restaurant floor (polished stone)': F.checker,
+      'Kitchen floor (ceramic tiles)': F.checker,
+      'Verandah': [F.sandstone, F.sandstone, F.checker, F.sandstone, F.sandstone, F.sandstone],
+      'Entrance step': [F.sandstone, F.sandstone, F.checker, F.sandstone, F.sandstone, F.sandstone],
+      'Vanity base': [F.reededWalnut, F.reededWalnut, F.reededWalnut, F.reededWalnut, F.reededWalnut, F.reededWalnut],
+      'Vanity top': F.redMarble,
+      'Basin': F.basinMarble,
       'Plinth': F.sandstone,
       'Dormer roof': [F.dormerClad, F.dormerClad, F.dormerClad, F.boards, F.dormerClad, F.dormerClad],
       'Dormer frame': [F.ceiling, F.ceiling, F.ceiling, F.ceiling, F.ceiling, F.ceiling]
@@ -360,9 +452,89 @@
       g.add(m); return m;
     }
 
-    // Checkered tiling in the transitional walkway (back door corridor) and the W.Cs
-    addBox(groups.ground, F.checker, 1.4, 2.2, GF + 0.011, GF + 0.016, 0.2, 4.9, 'Walkway tiling');
-    addBox(groups.ground, F.checker, 0.2, 1.2, GF + 0.011, GF + 0.016, 0.2, 2.9, 'W.C tiling');
+    // ---------- Lounge: botanical mural on the back (north) knee wall ----------
+    const loungeMural = new THREE.CanvasTexture(botanical(3072, 470, 23, {
+      ground: '#e6d6bf', mottle: '120,80,50', stem: '#5b3a24', vein: 'rgba(40,20,10,0.55)',
+      blocks: ['#b8643c', '#8f3b26', '#c98a4b', '#d9b48a', '#6e2f20'],
+      leaves: ['#3f4a2a', '#5c6b2c', '#7a3424', '#a4522f', '#2f3a24', '#b8743c', '#6b6a3a'],
+      density: 2.6, monstera: 0.45 }));
+    loungeMural.colorSpace = THREE.SRGBColorSpace; loungeMural.anisotropy = 8;
+    const lm = new THREE.Mesh(new THREE.PlaneGeometry(9.6, EAVE - 0.04 - FF), S({ map: loungeMural, roughness: 0.85 }));
+    lm.position.set(5.0, (FF + EAVE - 0.04) / 2, 0.206);
+    lm.userData.keepUV = true; lm.receiveShadow = true; lm.name = 'Botanical mural'; groups.first.add(lm);
+
+    // ---------- Basin lobby under the stair (after the washroom reference) ----------
+    const paper = new THREE.CanvasTexture(botanical(1024, 1100, 31, {
+      ground: '#b9776a', mottle: '90,40,30', stem: '#6b3a2c', vein: 'rgba(255,235,220,0.35)',
+      blocks: ['#a85c4c', '#c98b7a', '#9b4b3f'],
+      leaves: ['#8c9a7b', '#c9a08f', '#e1c4b3', '#6f7e63', '#a65d4f', '#d9b9a5'],
+      density: 9, monstera: 0.15 }));
+    paper.colorSpace = THREE.SRGBColorSpace;
+    const paperMat = S({ map: paper, roughness: 0.7 });
+    const pw = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 1.72), paperMat);   // west wall behind the vanity
+    pw.rotation.y = Math.PI / 2; pw.position.set(0.206, GF + 0.86, 4.55);
+    const ps = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 2.08), paperMat);       // up to the W.C ceiling (2.1 m)
+    ps.position.set(0.7, GF + 1.04, 3.806);                                     // W.C wall closing the lobby
+    [pw, ps].forEach(m => { m.userData.keepUV = true; m.receiveShadow = true; m.name = 'Leaf wallpaper'; groups.ground.add(m); });
+    // Round mirror with a brass bead frame
+    const mirror = new THREE.Mesh(new THREE.CircleGeometry(0.42, 48), F.mirror);
+    mirror.rotation.y = Math.PI / 2; mirror.position.set(0.215, GF + 1.42, 4.55); mirror.userData.keepUV = true;
+    groups.ground.add(mirror);
+    for (let k = 0; k < 30; k++) {
+      const a = k / 30 * Math.PI * 2, bead = new THREE.Mesh(new THREE.SphereGeometry(0.034, 12, 8), F.brass);
+      bead.position.set(0.24, GF + 1.42 + Math.sin(a) * 0.46, 4.55 + Math.cos(a) * 0.46); bead.castShadow = true;
+      groups.ground.add(bead);
+    }
+    // Fluted-glass sconces either side
+    [3.98, 5.12].forEach(z => {
+      const sc = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.3, 20), S({ color: 0x000000, emissive: 0xffd09a, emissiveIntensity: 3, emissiveMap: reeds.map }));
+      sc.position.set(0.27, GF + 1.42, z); groups.ground.add(sc);
+      addBox(groups.ground, F.brass, 0.2, 0.26, GF + 1.25, GF + 1.59, z - 0.02, z + 0.02);
+      const l = new THREE.PointLight(0xffc890, 0.8, 4, 2); l.position.set(0.75, GF + 1.6, z); groups.ground.add(l); lights.push(l);
+    });
+
+    // ---------- Ground floor: colourful woven disc lights (after the reference) ----------
+    const discCanvas = (() => {
+      const W = 2048, H = 64, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+      const ctx = cv.getContext('2d'), rr = rng(77);
+      const cols = ['#c8322a', '#e2662a', '#f0b52f', '#f7d36a', '#2f8f5b', '#1f8a85', '#f3e6cc', '#d9455f', '#e98a3a', '#7fb069'];
+      let x = 0;
+      while (x < W) {
+        const w = 18 + rr() * 70; ctx.fillStyle = cols[Math.floor(rr() * cols.length)];
+        ctx.fillRect(x, 0, w + 1, H); x += w;
+      }
+      for (let k = 0; k < W; k += 4) { ctx.fillStyle = `rgba(0,0,0,${0.08 + rr() * 0.12})`; ctx.fillRect(k, 0, 1, H); }
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, 'rgba(255,245,225,0.55)'); g.addColorStop(0.25, 'rgba(255,245,225,0)'); g.addColorStop(1, 'rgba(0,0,0,0.12)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      return cv;
+    })();
+    const discTex = new THREE.CanvasTexture(discCanvas); discTex.colorSpace = THREE.SRGBColorSpace; discTex.wrapS = THREE.RepeatWrapping;
+    const discMat = S({ map: discTex, side: THREE.DoubleSide, roughness: 0.75, emissive: 0xffffff, emissiveMap: discTex, emissiveIntensity: 0.04 });
+    const bowlMat = S({ color: 0xb38a4c, metalness: 1, roughness: 0.35, side: THREE.DoubleSide });
+    function disc(x, z, rad, y, tilt) {
+      const pts = [];
+      for (let k = 0; k <= 12; k++) { const t = k / 12; pts.push(new THREE.Vector2(0.12 + (rad - 0.12) * t, 0.22 * (1 - t) - 0.05 * t * t)); }
+      const geo = new THREE.LatheGeometry(pts, 96);
+      const m = new THREE.Mesh(geo, discMat);
+      m.position.set(x, y, z); m.rotation.set(tilt, 0, tilt * 0.6);
+      m.userData.keepUV = true; m.castShadow = true; m.name = 'Woven disc light';
+      groups.ground.add(m);
+      const bowl = new THREE.Mesh(new THREE.SphereGeometry(0.16, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), bowlMat);
+      bowl.position.set(x, y + 0.2, z); groups.ground.add(bowl);
+      const glow = new THREE.Mesh(new THREE.CircleGeometry(0.12, 24), F.bulb);
+      glow.rotation.x = Math.PI / 2; glow.position.set(x, y + 0.06, z); groups.ground.add(glow);
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, CEIL - (y + 0.22), 6), F.cord);
+      cord.position.set(x, (CEIL + y + 0.22) / 2, z); groups.ground.add(cord);
+      const l = new THREE.PointLight(0xffc488, 6, 7, 2); l.position.set(x, y - 0.12, z); groups.ground.add(l); lights.push(l);
+    }
+    disc(3.2, 6.7, 1.05, CEIL - 0.55, 0.04);
+    disc(5.7, 7.3, 1.25, CEIL - 0.7, -0.03);
+    disc(8.2, 6.6, 0.95, CEIL - 0.5, 0.05);
+    disc(2.6, 8.9, 0.8, CEIL - 0.85, -0.05);
+    disc(4.6, 9.0, 0.9, CEIL - 0.6, 0.03);
+    disc(7.0, 8.95, 1.0, CEIL - 0.8, -0.04);
+    disc(9.0, 8.7, 0.65, CEIL - 0.6, 0.06);
 
     // Woven rattan pendant with a warm lamp inside
     const bellGeo = new THREE.LatheGeometry([

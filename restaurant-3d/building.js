@@ -271,8 +271,15 @@
     // W.C fittings
     box(ground, mats.sanitary, 0.45, 0.85, GF, GF + 0.42, 0.25, 0.85, 'W.C');
     box(ground, mats.sanitary, 0.45, 0.85, GF, GF + 0.42, 2.05, 2.65, 'W.C');
-    box(ground, mats.sanitary, 0.22, 0.55, GF + 0.75, GF + 0.9, 3.95, 4.45, 'Wash hand basin');
-    box(ground, mats.sanitary, 0.22, 0.55, GF + 0.75, GF + 0.9, 4.65, 5.15, 'Wash hand basin');
+    // Basin vanity in the lobby under the stair: reeded base, marble top with upstand, two basins
+    box(ground, mats.wood, 0.2, 0.72, GF, GF + 0.8, 3.92, 5.18, 'Vanity base');
+    box(ground, mats.counter, 0.2, 0.76, GF + 0.8, GF + 0.85, 3.88, 5.22, 'Vanity top');
+    box(ground, mats.counter, 0.2, 0.24, GF + 0.85, GF + 1.05, 3.88, 5.22, 'Vanity top');
+    [4.22, 4.88].forEach(z => {
+      box(ground, mats.counter, 0.36, 0.66, GF + 0.851, GF + 0.853, z - 0.2, z + 0.2, 'Basin');
+      box(ground, mats.brass, 0.24, 0.38, GF + 0.98, GF + 1.0, z - 0.012, z + 0.012, 'Tap');
+      box(ground, mats.brass, 0.36, 0.38, GF + 0.9, GF + 1.0, z - 0.012, z + 0.012, 'Tap');
+    });
     // Restaurant
     if (furnished) {
     booth(ground, 3.0, 9.15, GF, mats.sofaGF);

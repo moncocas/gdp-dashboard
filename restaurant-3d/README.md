@@ -37,6 +37,13 @@ The scheme in `interior.js` replaces every material with a textured one and adds
 
 A glazed box dormer sits on the front roof slope. It's 5.0 m wide (2,400 | 5,000 | 2,400 on the revised first floor plan), and its floor cantilevers 1.2 m past grid 5, out to grid 6 over the verandah. Its head is 2,630 mm above the first floor. It has a deep light portal frame, four glazed bays with a guarding transom, and dark standing‑seam cladding on the roof and sides. The front knee wall, the roof sheeting and the truss on grid C stop around it.
 
+## Finishes and lighting (latest)
+
+- **Ground floor:** black and white marble laid diagonally throughout, including the restaurant, kitchen, walkway, W.C.s and verandah.
+- **Lounge:** a hand‑painted‑style botanical mural (big leaves over arches) on the back knee wall, lit by the LED cove above it.
+- **Basin lobby under the stair:** a red marble vanity with a reeded walnut base and brass taps, a round mirror with a brass bead frame, fluted‑glass sconces and leaf wallpaper.
+- **Ground‑floor lights:** seven colourful woven disc pendants with brass centres over the restaurant.
+
 ## Other revisions
 
 - **Columns:** the centre columns are removed, on grid C at lines 3 and 5 downstairs, and on grid 3 upstairs together with their beam. The lounge is now a clear span under the trusses.
