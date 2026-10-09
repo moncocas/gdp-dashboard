@@ -1,0 +1,349 @@
+<title>Sadik Restaurant Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: full-bleed photographic render, a concept-board card floating top-left */
+  :root {
+    --sky: #2a211c;
+    --paper: #f6efe4;
+    --ink: #2b211b;
+    --muted: #7a6656;
+    --line: #dccbb6;
+    --accent: #a8492c;
+    --accent-ink: #fff8f0;
+    --sw-terracotta: #a8492c; --sw-ochre: #c58b2a; --sw-olive: #5c6b2c; --sw-charcoal: #2a2826; --sw-brass: #b38a4c;
+    --font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    --font-body: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #241c17; --ink: #f1e6d8; --muted: #b39d89; --line: #45362c;
+      --accent: #d0774f; --accent-ink: #1d1410; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #241c17; --ink: #f1e6d8; --muted: #b39d89; --line: #45362c;
+    --accent: #d0774f; --accent-ink: #1d1410; color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--sky); color: var(--ink); font-family: var(--font-body); overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  .card {
+    position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px;
+    width: min(330px, calc(100vw - 32px));
+    background: var(--paper); border: 1px solid var(--line);
+    box-shadow: 0 18px 40px rgba(20, 10, 4, 0.28);
+    display: grid;
+  }
+  .card > * { padding: 12px 14px; }
+  .card > * + * { border-top: 1px solid var(--line); }
+  .eyebrow { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin: 0 0 2px; }
+  h1 { font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1.05; margin: 0; text-wrap: balance; }
+  .sub { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+  .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size: 10.5px; color: var(--muted); }
+  .palette span { display: grid; gap: 4px; }
+  .palette i { display: block; height: 18px; border: 1px solid rgba(0,0,0,0.12); }
+  .views { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .views button, .quality {
+    font: 500 13px/1 var(--font-body); color: var(--ink); background: transparent;
+    border: 1px solid var(--line); padding: 9px 4px; cursor: pointer;
+  }
+  .views button:hover, .quality:hover { border-color: var(--accent); }
+  .views button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  details summary { cursor: pointer; font-size: 13px; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+  details summary::after { content: "+"; font-family: var(--font-mono); color: var(--muted); }
+  details[open] summary::after { content: "\2212"; }
+  dl { margin: 10px 0 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px; }
+  dt { color: var(--muted); }
+  dd { margin: 0; font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; }
+  .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .quality { padding: 6px 8px; font-size: 12px; }
+  .caption {
+    position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    max-width: min(420px, calc(100vw - 32px));
+    font-family: var(--font-display); font-style: italic; font-size: 17px; color: #f6ead9;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.55); text-align: right;
+    background: rgba(28, 18, 12, 0.42); padding: 8px 12px; margin: 0;
+  }
+  .caption small { display: block; font-family: var(--font-mono); font-style: normal; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.8; }
+  .loading[hidden], .film[hidden] { display: none; }
+  .fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+  /* Title cards used when the walkthrough video is recorded */
+  .film { position: fixed; left: 56px; bottom: 56px; color: #fbf1e3; text-shadow: 0 2px 18px rgba(0,0,0,0.6); pointer-events: none; }
+  .film-sub { margin: 0 0 6px; font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase; opacity: 0.85; }
+  .film-title { margin: 0; font-family: var(--font-display); font-weight: 500; font-size: 54px; line-height: 1; }
+  .loading { position: fixed; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: 12px; color: #e9d9c4; pointer-events: none; }
+  @media (max-width: 560px) {
+    .card { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+    h1 { font-size: 24px; }
+    .palette, .card details { display: none; }
+    .caption { top: calc(16px + env(safe-area-inset-top, 0px)); bottom: auto; }
+  }
+</style>
+
+<div id="stage" aria-label="Photorealistic 3D model of the restaurant"></div>
+<div class="loading" id="loading">Preparing materials and light…</div>
+
+<section class="card">
+  <header>
+    <p class="eyebrow">Proposed restaurant · Sadik Abdi</p>
+    <h1>Earth &amp; Artisanship</h1>
+    <p class="sub">Interior scheme on the as-drawn plan, AU/PL05/2026.08</p>
+  </header>
+  <div class="palette" aria-label="Colour palette">
+    <span><i style="background:var(--sw-terracotta)"></i>Terracotta</span>
+    <span><i style="background:var(--sw-ochre)"></i>Ochre</span>
+    <span><i style="background:var(--sw-olive)"></i>Olive</span>
+    <span><i style="background:var(--sw-charcoal)"></i>Charcoal</span>
+    <span><i style="background:var(--sw-brass)"></i>Brass</span>
+  </div>
+  <div class="views" role="group" aria-label="Camera">
+    <button id="v-rest" type="button" aria-pressed="false">Restaurant</button>
+    <button id="v-lounge" type="button" aria-pressed="false">Lounge</button>
+    <button id="v-walk" type="button" aria-pressed="false">Walkway</button>
+    <button id="v-ext" type="button" aria-pressed="false">Exterior</button>
+    <button id="v-dormer" type="button" aria-pressed="false">Dormer</button>
+    <button id="v-basin" type="button" aria-pressed="false">Basins</button>
+    <button id="v-banq" type="button" aria-pressed="false">Banquette</button>
+    <button id="v-sofa" type="button" aria-pressed="false">S-booth</button>
+    <button id="v-cut" type="button" aria-pressed="false">Roof off</button>
+    <button id="v-sec" type="button" aria-pressed="false">Section X–X</button>
+  </div>
+  <details>
+    <summary>Finishes</summary>
+    <dl>
+      <dt>Walls</dt><dd>White lime plaster</dd>
+      <dt>Restaurant floor</dt><dd>Oak herringbone</dd>
+      <dt>Walkway, W.C.s</dt><dd>Black &amp; white marble</dd>
+      <dt>Counters</dt><dd>Reeded walnut</dd>
+      <dt>Roof lining</dt><dd>Timber boards</dd>
+      <dt>Railings</dt><dd>Brushed brass</dd>
+    </dl>
+  </details>
+  <div class="meta"><span id="status">Drag to look around</span><button class="quality" id="quality" type="button">Quality: High</button></div>
+</section>
+
+<p class="caption" id="caption"></p>
+<div class="fade" id="fade"></div>
+<div class="film" id="film" hidden><p class="film-sub" id="film-sub"></p><p class="film-title" id="film-title"></p></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script src="building.js"></script>
+<script src="interior.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+const stage = document.getElementById('stage');
+const narrowScreen = () => (stage.clientWidth || innerWidth) < 600;
+let high = !narrowScreen();
+
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 3000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+
+// Model: geometry exactly as drawn, then the Earth & Artisanship finishes and lighting
+const model = window.buildRestaurant(THREE);
+const scheme = window.applyEarthArtisanship(THREE, model, { RectAreaLightUniformsLib });
+scene.add(model.root);
+
+// Late-afternoon sun, low over the front-right, streaming through the shopfront and the east gable
+const sunDir = new THREE.Vector3(0.62, 0.27, 0.74).normalize();
+const centre = new THREE.Vector3(5, 3, 5.5);
+const sun = new THREE.DirectionalLight(0xffb978, 3.4);
+sun.position.copy(centre).addScaledVector(sunDir, 40);
+sun.target.position.copy(centre);
+sun.castShadow = true;
+Object.assign(sun.shadow.camera, { left: -15, right: 15, top: 15, bottom: -15, near: 5, far: 90 });
+sun.shadow.bias = -0.0002;
+sun.shadow.normalBias = 0.02;
+sun.shadow.radius = 3;
+scene.add(sun, sun.target);
+scene.add(new THREE.HemisphereLight(0xffdcb8, 0x5a4030, 0.08));
+
+const sky = new Sky();
+sky.scale.setScalar(2000);
+sky.material.uniforms.turbidity.value = 7;
+sky.material.uniforms.rayleigh.value = 2.4;
+sky.material.uniforms.mieCoefficient.value = 0.006;
+sky.material.uniforms.mieDirectionalG.value = 0.86;
+sky.material.uniforms.sunPosition.value.copy(sunDir);
+sky.userData.noAO = true;
+scene.add(sky);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const skyScene = new THREE.Scene();
+const skyCopy = new Sky(); skyCopy.scale.setScalar(2000); skyCopy.material = sky.material; skyScene.add(skyCopy);
+scene.environment = pmrem.fromScene(skyScene, 0.04).texture;
+scene.environmentIntensity = 0.16;
+
+// Photographic post: ambient occlusion in the crevices, glow on the lamps, filmic tone curve
+let composer, gtao, bloom;
+function buildComposer(w, h) {
+  if (composer) { composer.passes.forEach(p => p.dispose && p.dispose()); composer.dispose(); }
+  const target = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, samples: 4 });
+  composer = new EffectComposer(renderer, target);
+  composer.addPass(new RenderPass(scene, camera));
+  gtao = new GTAOPass(scene, camera, w, h);
+  gtao.updateGtaoMaterial({ radius: 0.45, distanceExponent: 1.6, thickness: 1.2, scale: 1.25, samples: 12, distanceFallOff: 1, screenSpaceRadius: false });
+  gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, radiusExponent: 1, rings: 2, samples: 12 });
+  gtao.blendIntensity = 1.0;
+  const hideFromAO = gtao.overrideVisibility.bind(gtao);
+  gtao.overrideVisibility = function () {
+    hideFromAO();
+    scene.traverse(o => { if (o.userData.noAO || (o.isMesh && o.material.transparent)) o.visible = false; });
+  };
+  composer.addPass(gtao);
+  bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.32, 0.55, 0.95);
+  composer.addPass(bloom);
+  composer.addPass(new OutputPass());
+}
+
+const views = {
+  'v-rest':   { cam: [9.35, 1.72, 5.55], target: [2.0, 1.35, 8.9], fov: 58, exp: 0.62, caption: 'Restaurant, ground floor', note: 'Looking south-west to the open front and the stair' },
+  'v-lounge': { cam: [9.55, 5.3, 7.75], target: [1.0, 5.9, 4.0], fov: 60, exp: 1.0, caption: 'Lounge under the roof', note: 'Clear span under black steel trusses' },
+  'v-basin':  { cam: [1.75, 1.55, 6.3], target: [0.3, 1.35, 4.5], fov: 58, exp: 0.8, caption: 'Basin lobby under the stair', note: 'Red marble, leaf wallpaper, brass beads' },
+  'v-banq':   { cam: [9.15, 5.25, 2.75], target: [2.0, 4.6, 0.85], fov: 55, exp: 0.95, caption: 'Banquette along the mural', note: 'Striped banquette, marble bistro tables, velvet chairs' },
+  'v-sofa':   { cam: [8.9, 5.7, 9.2], target: [4.6, 4.3, 5.4], fov: 55, exp: 0.9, caption: 'Serpentine booth', note: 'Terracotta channel-tufted S-booth under woven basket pendants' },
+  'v-walk':   { cam: [1.8, 1.62, 4.75], target: [1.8, 0.95, 0.2], fov: 64, exp: 1.4, caption: 'Back-of-house walkway', note: 'W.C. doors left, kitchen right' },
+  'v-dormer': { cam: [5.0, 4.4, 22.0], target: [4.95, 5.4, 9.0], fov: 38, exp: 0.75, caption: 'The new roof dormer', note: 'Glazed box dormer, 5.0 m wide, 1.2 m out over the verandah' },
+  'v-ext':    { cam: [20.5, 2.0, 23.5], target: [4.6, 4.3, 5.2], fov: 40, exp: 0.75, caption: 'Golden hour from the street', note: 'Shopfront, verandah and the glazed east gable' },
+  'v-cut':    { cam: [-5.5, 16.5, 19.5], target: [5, 3.6, 5], fov: 42, exp: 0.85, roof: false, caption: 'Roof off', note: 'Lounge layout from above' },
+  'v-sec':    { cam: [24, 5.4, 5.2], target: [5, 5, 5.2], fov: 42, exp: 0.95, clip: true, caption: 'Section X–X', note: 'Cut between grids C and B, looking west' }
+};
+
+const cut = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 5.8);
+const allMats = new Set();
+model.root.traverse(o => { if (o.isMesh) [].concat(o.material).forEach(m => allMats.add(m)); });
+function setClip(on) {
+  allMats.forEach(m => { m.clippingPlanes = on ? [cut] : null; m.clipShadows = on; m.needsUpdate = true; });
+}
+
+let tween = null, current = null, dirty = true;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function show(id, instant) {
+  const v = views[id]; current = id;
+  model.groups.roof.visible = v.roof !== false;
+  setClip(!!v.clip);
+  if (gtao) gtao.enabled = high && !v.clip;
+  const p1 = new THREE.Vector3(...v.cam), t1 = new THREE.Vector3(...v.target);
+  const interior = v.fov >= 55;
+  controls.minDistance = interior ? 0.05 : 4;
+  controls.maxDistance = interior ? 14 : 70;
+  controls.maxPolarAngle = interior ? Math.PI * 0.85 : Math.PI * 0.495;
+  if (instant || reduceMotion) {
+    camera.position.copy(p1); controls.target.copy(t1); camera.fov = v.fov;
+    renderer.toneMappingExposure = v.exp; camera.updateProjectionMatrix(); tween = null;
+  } else {
+    tween = { p0: camera.position.clone(), t0: controls.target.clone(), p1, t1, f0: camera.fov, f1: v.fov,
+              e0: renderer.toneMappingExposure, e1: v.exp, start: performance.now(), dur: 1100 };
+  }
+  document.getElementById('caption').innerHTML = `<small>${v.note}</small>${v.caption}`;
+  Object.keys(views).forEach(k => document.getElementById(k).setAttribute('aria-pressed', String(k === id)));
+  try { localStorage.setItem('restaurant-view', id); } catch (e) {}
+  dirty = true;
+}
+Object.keys(views).forEach(id => document.getElementById(id).addEventListener('click', () => show(id)));
+controls.addEventListener('change', () => { dirty = true; });
+
+const qBtn = document.getElementById('quality');
+function applyQuality() {
+  qBtn.textContent = 'Quality: ' + (high ? 'High' : 'Fast');
+  renderer.setPixelRatio(high ? Math.min(devicePixelRatio || 1, 1.5) : 1);
+  sun.shadow.mapSize.set(high ? 4096 : 2048, high ? 4096 : 2048);
+  if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  resize();
+}
+qBtn.addEventListener('click', () => { high = !high; applyQuality(); });
+
+function resize() {
+  const w = stage.clientWidth || innerWidth, h = stage.clientHeight || innerHeight;
+  renderer.setSize(w, h, false);
+  const pr = renderer.getPixelRatio();
+  buildComposer(Math.round(w * pr), Math.round(h * pr));
+  if (current) gtao.enabled = high && !views[current].clip;
+  bloom.enabled = true;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  dirty = true;
+}
+addEventListener('resize', resize);
+
+let start = 'v-rest';
+try { const s = localStorage.getItem('restaurant-view'); if (s && views[s]) start = s; } catch (e) {}
+applyQuality();
+show(start, true);
+
+const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+let frames = 0;
+renderer.setAnimationLoop(now => {
+  if (tween) {
+    const k = Math.min(1, (now - tween.start) / tween.dur), e = ease(k);
+    camera.position.lerpVectors(tween.p0, tween.p1, e);
+    controls.target.lerpVectors(tween.t0, tween.t1, e);
+    camera.fov = tween.f0 + (tween.f1 - tween.f0) * e;
+    renderer.toneMappingExposure = tween.e0 + (tween.e1 - tween.e0) * e;
+    camera.updateProjectionMatrix();
+    if (k === 1) tween = null;
+    dirty = true;
+  }
+  controls.update();
+  if (!dirty) return;
+  dirty = false;
+  composer.render();
+  if (++frames === 1) document.getElementById('loading').hidden = true;
+});
+
+// Hooks for producing still renders
+// Frame-by-frame camera control for recording the walkthrough video
+function shot(o) {
+  camera.position.set(...o.cam); controls.target.set(...o.target);
+  camera.fov = o.fov; camera.updateProjectionMatrix(); camera.lookAt(controls.target);
+  renderer.toneMappingExposure = o.exp;
+  model.groups.roof.visible = o.roof !== false;
+  const clip = o.clipX !== undefined && o.clipX !== null;
+  if (clip) cut.constant = o.clipX;
+  if (clip !== !!shot.clip) setClip(clip);
+  // The scene is static, so the sun's shadow map only needs redrawing when the cut or roof changes
+  renderer.shadowMap.autoUpdate = false;
+  const key = (clip ? o.clipX.toFixed(2) : '-') + (o.roof !== false);
+  if (key !== shot.key) { renderer.shadowMap.needsUpdate = true; shot.key = key; }
+  shot.clip = clip;
+  gtao.enabled = high && !clip;
+  tween = null; dirty = true;
+}
+function film(title, sub, opacity, fade) {
+  document.getElementById('fade').style.opacity = fade || 0;
+  const el = document.getElementById('film');
+  el.hidden = !title || opacity <= 0;
+  el.style.opacity = opacity;
+  document.getElementById('film-title').textContent = title || '';
+  document.getElementById('film-sub').textContent = sub || '';
+}
+function renderNow() { controls.update(); composer.render(); frames++; dirty = false; document.getElementById('loading').hidden = true; return frames; }
+window.__render = { show: id => show(id, true), shot, film, renderNow, frames: () => frames, setHigh: v => { high = v; applyQuality(); } };
+</script>
